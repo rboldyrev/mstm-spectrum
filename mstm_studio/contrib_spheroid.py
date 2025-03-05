@@ -2,15 +2,15 @@
 #
 # ----------------------------------------------------- #
 #                                                       #
-#  This code is a part of T-matrix fitting project      #
-#  Contributors:                                        #
+#  Этот код является частью проекта подбора T-матрицы   #
+#  Вкладчики:                                           #
 #   L. Avakyan <laavakyan@sfedu.ru>                     #
 #   D. Kostyulin <kostyulin@sfedu.ru>                   #
 #                                                       #
 # ----------------------------------------------------- #
 """
-Contributions to optical extinction spectra from axial-symmetric
-particles. Currently, spheroids.
+Вклады в спектры оптического экстинкции от осесимметричных
+частиц. В настоящее время - сфероиды.
 """
 from __future__ import print_function
 from __future__ import division
@@ -20,12 +20,12 @@ try:
 except ImportError:
     pass
 
-# use input in both python2 and python3
+# использование input в Python2 и Python3
 try:
     input = raw_input
 except NameError:
     pass
-# use xrange in both python2 and python3
+# использование xrange в Python2 и Python3
 try:
     xrange
 except NameError:
@@ -44,35 +44,34 @@ from mstm_studio.contributions import MieSingleSphere
 
 class SpheroidSP(MieSingleSphere):
     """
-    Extinction from spheroid calculated in T-matrix approach
-    using external library `ScatterPy`
+    Экстинкция от сфероида, рассчитанная с использованием подхода T-матрицы
+    с использованием внешней библиотеки `ScatterPy`
     <https://github.com/TCvanLeth/ScatterPy>
     """
     number_of_params = 3
-    NORDER = 5   # number of harmonics
-    NGAUSS = 11  # integration points
+    NORDER = 5   # количество гармоник
+    NGAUSS = 11  # точки интегрирования
 
     def calculate(self, values):
         """
-        Parameters:
+        Параметры:
 
-            values: list of parameters `scale`, `size` and `aspect`
-                    Scale is an arbitrary multiplier.
-                    Size parameter is the radius of equivelent-volume
-                    sphere.
-                    The aspect ratio is
-                    "the ratio of horizontal to rotational axes"
-                    according to scatterpy/shapes.py
+            values: список параметров `scale`, `size` и `aspect`
+                    Scale - произвольный множитель.
+                    Size - параметр размера, радиус сферы эквивалентного объема.
+                    Соотношение сторон - это
+                    "отношение горизонтальной оси к оси вращения"
+                    согласно scatterpy/shapes.py
 
-        Return:
+        Возвращает:
 
-            extinction efficiency array for spheroid particle
+            массив эффективности экстинкции для частицы сфероида
         """
         self._check(values)
         if self.material is None:
             raise Exception('T-matrix calculation requires material data. Stop.')
         Cext = np.zeros(len(self.wavelengths))
-        if calc_T is None:  # failed to import scatterpy
+        if calc_T is None:  # не удалось импортировать scatterpy
             return Cext
         nk = self.material.get_n(self.wavelengths) + \
              1j * self.material.get_k(self.wavelengths)
@@ -95,21 +94,21 @@ class SpheroidSP(MieSingleSphere):
 
     def plot_shape(self, values, fig=None, axs=None):
         """
-        Plot shape profile.
-        Spatial shape is achieved by rotation over vertical axis.
+        Построение профиля формы.
+        Пространственная форма достигается вращением вокруг вертикальной оси.
 
-        Parameters:
+        Параметры:
 
-            values: list of control parameters
-                    `scale`, `size` and `aspect`
+            values: список управляющих параметров
+                    `scale`, `size` и `aspect`
 
-            fig: matplotlib figure
+            fig: фигура matplotlib
 
-            axs: matplotlib axes
+            axs: оси matplotlib
 
-        Return:
+        Возвращает:
 
-            filled/created fig and axs objects
+            созданные или заполненные объекты fig и axs
         """
         flag = fig is None
         if flag:
@@ -120,7 +119,7 @@ class SpheroidSP(MieSingleSphere):
         # aspect = a / c
         a = values[1] * values[2]**(1/3.)
         c = a / values[2]
-        # oblate / prolate speroid surface function from [Tsang1984]
+        # поверхность сплюснутого / вытянутого сфероида из [Tsang1984]
         r = 1 / np.sqrt((np.sin(theta)/a)**2 + (np.cos(theta)/c)**2)
         x = r * np.sin(theta)
         z = r * np.cos(theta)
@@ -133,4 +132,3 @@ class SpheroidSP(MieSingleSphere):
         if flag:
             plt.show()
         return fig, axs
-

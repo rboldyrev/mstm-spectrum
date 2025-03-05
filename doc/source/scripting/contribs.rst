@@ -1,35 +1,35 @@
-.. _contribs:
+   .. _contribs:
 
 
-Simple functions and Mie theory
--------------------------------
+   Простые функции и теория Ми
+   -------------------------------
 
-Example
-^^^^^^^
+   Пример
+   ^^^^^^^
 
-The example how to obtain contribution to the extinction from Log-Normally distributed spheres. Other contributions are evaluated in similar way.
+   Пример того, как получить вклад в экстинкцию от сфер с логнормальным распределением. Другие вклады рассчитываются аналогичным образом.
 
-.. literalinclude:: mie_contrib.py
-   :lines: 3-12
-
-
-.. image:: mie_contrib.png
+   .. literalinclude:: mie_contrib.py
+      :lines: 3-12
 
 
-.. literalinclude:: mie_contrib.py
-   :lines: 14-16
+   .. image:: mie_contrib.png
 
 
-.. image:: mie_distrib.png
+   .. literalinclude:: mie_contrib.py
+      :lines: 14-16
 
 
-Classes
-^^^^^^^
-
-.. automodule:: mstm_studio.contributions
-    :members: Contribution, ConstantBackground, LinearBackground, LorentzBackground, LorentzPeak, GaussPeak, MieSingleSphere, MieLognormSpheres, MieLognormSpheresCached 
+   .. image:: mie_distrib.png
 
 
+   Классы
+   ^^^^^^^
 
-.. [Kreibig_book1995] U. Kreibig, M. Vollmer, "Optical Properties of Metal Clusters" (1995) 553
+   .. automodule:: mstm_studio.contributions
+      :members: Contribution, ConstantBackground, LinearBackground, LorentzBackground, LorentzPeak, GaussPeak, MieSingleSphere, MieLognormSpheres, MieLognormSpheresCached 
+
+
+
+   .. [Kreibig_book1995] U. Kreibig, M. Vollmer, "Optical Properties of Metal Clusters" (1995) 553
 

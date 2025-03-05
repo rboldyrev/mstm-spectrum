@@ -2,32 +2,30 @@
 Multi Spheres T-matrix Studio
 =============================
 
-Python wrapper for multiple sphere T-matrix (`MSTM <http://doi.org/10.1016/j.jqsrt.2011.02.019>`_) code and Mie theory to calculate surface plasmon resonance (SPR) spectrum and fit it to experiment.
+Python-обертка для кода `MSTM <http://doi.org/10.1016/j.jqsrt.2011.02.019>`_ (Multiple Sphere T-matrix) и теории Ми для расчета спектров поверхностного плазмонного резонанса (SPR) и их подгонки под экспериментальные данные.
 
-Features
-========
+Возможности
+===========
 
-* Materials defined from constant expression, from tabulated file or from analytical formula of `Rioux et al <http://doi.org/10.1002/adom.201300457>`_ for Au-Ag;
-* Simple functional contributions (linear, lorentzian, gaussian)
-* Mie theory contributions
-* MSTM calculations: spectra and near-field intensity
-* Fitting of experimental data by any of the mentioned contributions, including combinations
-* Interactive graphical user interface
-* Flexible Python scripting
+* Материалы задаются через константные выражения, табличные файлы или аналитические формулы `Rioux et al <http://doi.org/10.1002/adom.201300457>`_ для Au-Ag;
+* Простые функциональные вклады (линейные, лоренцевские, гауссовские);
+* Вклады теории Ми;
+* Расчеты MSTM: спектры и интенсивность ближнего поля;
+* Подгонка экспериментальных данных с использованием любых из упомянутых вкладов, включая их комбинации;
+* Интерактивный графический интерфейс;
+* Гибкое программирование на Python.
 
-Contents
-========
+Содержание
+==========
 
 .. toctree::
     installation
     gui/gui
     scripting/scripting
-    
-Contacts
+
+Контакты
 ========
 
 GitHub: https://github.com/lavakyan/mstm-spectrum
 
 E-mail: laavakyan\_at\_sfedu.ru
-
-

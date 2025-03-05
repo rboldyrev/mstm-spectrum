@@ -1,4 +1,3 @@
-
 import sys
 import numpy as np
 from scipy import interpolate
@@ -17,25 +16,25 @@ class RiiMaterial(Material):
 
     def __init__(self, archive_filename=''):
         '''
-        Setup material from RefractiveIndexInfo database dump
-        available online at url:
+        Настройка материала из дампа базы данных RefractiveIndexInfo,
+        доступного онлайн по адресу:
         <https://refractiveindex.info/download/database/>
 
-        archive_filename: string
-            path to the downloaded zip file of db dump
+        archive_filename: строка
+            путь к загруженному zip-файлу базы данных
 
-        Example of usage:
+        Пример использования:
         >>> riimat = RiiMaterial('rii-database-2024-08-14.zip')
         >>> riimat.select('main', 'Ag', 'Babar')
         '''
         self.rii_db_items = dict()
         if archive_filename == '':
-            # use system-dependedt default path
+            # использование системно-зависимого пути по умолчанию
             if sys.platform == 'win32':
                 appdata_path = Path.home() / 'AppData' / 'Roaming' / 'mstm_studio'
             else:
                 appdata_path = Path.home() / '.mstm_studio'
-            # find in appdata_path
+            # поиск в appdata_path
             filenames = list(appdata_path.glob('rii-database-*.zip'))
             if len(filenames) > 0:
                 archive_filename = filenames[-1]
@@ -56,8 +55,8 @@ class RiiMaterial(Material):
 
     def scan(self):
         '''
-        Read information about all materials in database
-        and store it in internal dict `rii_db_items`
+        Чтение информации обо всех материалах в базе данных
+        и сохранение её во внутреннем словаре `rii_db_items`
         '''
         self.rii_db_items = dict()
         #  0           1               2          3                 4
@@ -89,8 +88,8 @@ class RiiMaterial(Material):
 
     def filter_valid(self):
         '''
-        Remove materials from the internal dict `rii_db_items`
-        which does not contain data in limit of 300 and 800 nm
+        Удаление материалов из внутреннего словаря `rii_db_items`,
+        которые не содержат данных в пределах от 300 до 800 нм
         '''
         if self.rii_db_items is None:
             print('No items. Please `_scan()` first')
@@ -113,7 +112,7 @@ class RiiMaterial(Material):
                             self.get_k(800)
                         except Exception as e:
                             flag = False
-                    if flag:  # passed
+                    if flag:  # прошло проверку
                         if shelf not in filtered_items:
                             filtered_items[shelf] = dict()
                         if book not in filtered_items[shelf]:
@@ -123,8 +122,8 @@ class RiiMaterial(Material):
 
     def print_db_items(self):
         '''
-        Print to std outout the list (tree)
-        of available materials
+        Вывод в стандартный вывод списка (дерева)
+        доступных материалов
         '''
         if self.rii_db_items is None:
             print('No items. Please `_scan()` first')
@@ -140,14 +139,14 @@ class RiiMaterial(Material):
 
     def select(self, shelf, book, name):
         '''
-        Apply specific material from database.
-        shelf: str
-            the set of materials (main, organic, glasses, etc)
-        book: str
-            material name
-        name: str
-            (page in RII notation)
-            variant of the dielectric function for material
+        Применение конкретного материала из базы данных.
+        shelf: string
+            набор материалов (main, organic, glasses и т.д.)
+        book: string
+            название материала
+        name: string
+            (страница в нотации RII)
+            вариант диэлектрической функции для материала
         '''
         with zipfile.ZipFile(self.archive_filename) as z:
             with z.open(f'database/data-nk/{shelf}/{book}/{name}.yml', 'r') as f:
@@ -176,8 +175,8 @@ class RiiMaterial(Material):
 
     def count_materials(self):
         '''
-        Return the number of distinct materials
-        (not including variants of dielectric functions)
+        Возвращает количество уникальных материалов
+        (не включая варианты диэлектрических функций)
         '''
         i = 0
         for shelf in self.rii_db_items:

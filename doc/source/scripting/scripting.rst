@@ -1,31 +1,23 @@
-.. _scripting:
+.. _scripting:  
 
-Manual: Scripting
-=================
+Руководство: Скрипты  
+=================  
 
+Используйте Python-скрипты для полного контроля над вычислениями.  
 
-Use Python scripts for full control of calculations.
+.. note:: Простой способ указать путь к бинарному файлу MSTM в скрипте — использовать модуль `os`:  
 
+    .. code-block:: python  
 
-..note:: The easy way to point the MSTM binary in script is the usage of the `os` module: 
+        import os  
+        os.environ['MSTM_BIN'] = 'укажите путь к бинарному файлу mstm'  
 
-    .. code-block:: python
+    Путь по умолчанию: `'~/bin/mstm.x'`  
 
-        import os
-        os.environ['MSTM_BIN'] = 'your path to mstm binary'
-    
-    The default path is '~/bin/mstm.x'
-
-
-.. toctree::
-   materials
-   contribs
-   spheres
-   nearfield
-   nonspherical
-   fitting
-
-
-
-
-
+.. toctree::  
+   materials  
+   contribs  
+   spheres  
+   nearfield  
+   nonspherical  
+   fitting  

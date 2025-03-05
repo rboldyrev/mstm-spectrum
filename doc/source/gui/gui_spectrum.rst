@@ -1,35 +1,26 @@
 .. _gui_spectrum:
 
-
-MSTM spectrum
-^^^^^^^^^^^^^
+Спектр MSTM
+^^^^^^^^^^^
 
 .. image:: gui_mstm.png
 
-The spectrum calculation may be configured by pressing the "Setup" button.
-The relevant options in "Setup MSTM" window are:
+Расчет спектра можно настроить, нажав кнопку «Setup».
+В окне «Setup MSTM» доступны следующие параметры:
 
-"Calculation" mode could be extinction (default mode), absorbtion or scattering spectrum;
+- Режим «Calculation» может быть экстинкцией (режим по умолчанию), поглощением или рассеянием;
+- «min» — минимальная длина волны (в нм),
+- «max» — максимальная длина волны (в нм),
+- «count» — количество точек длины волны. По умолчанию шаг составляет 10 нм;
 
-"min" -- minimal wavelength (in nm),
+По умолчанию выполняется усреднение. Если флажок «average over orientations» снят, необходимо задать углы падения луча, то есть «Azimuth angle» и «Polar angle». В этом случае будут получены спектры для двух случаев поляризации (параллельной и ортогональной).
 
-"max" -- maximal wavelength (in nm),
+Кнопка «Calculate» в главном окне запускает бинарный файл MSTM во временном каталоге (зависит от ОС) и считывает результаты.
 
-"count" -- number of wavelength points. By default the spacing is 10 nm;
-
-By default the averaging is performed. If "average over orientations" is unchecked the incidence beam angles must be specified, i.e. "Azimuth angle" and "Polar angle". In this case the spectra for two polarization cases (parallel and orthogonal) will be obtained.
-
-"Calculate" button of the main window runs MSTM binary in temporary directory (OS-dependent) and reads the results.
-
-"scale" -- total outer multiplier.
-
-save button -- save extinction to column file.
-
-plot button -- plot without re-calculation (i.e. with new `scale`).
+- «scale» — общий внешний множитель.
+- Кнопка «save» — сохранение спектра экстинкции в виде столбчатого файла.
+- Кнопка «plot» — построение графика без пересчета (то есть с новым значением `scale`).
 
 .. image:: gui_mstm_plot.png
 
-The plot controls are rendered by Matplotlib, and can depend on the library version. Generally, it is possible to zoom region of interest and save graphic as a raster or vector image.
-
-
-
+Элементы управления графиком рендерятся с помощью Matplotlib и могут зависеть от версии библиотеки. Обычно можно увеличить интересующую область и сохранить график в растровом или векторном формате.

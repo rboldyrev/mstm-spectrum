@@ -1,36 +1,20 @@
 .. _gui_fitting:
 
-Fitting and constraints
------------------------
+Аппроксимация и ограничения
+---------------------------
 
 .. image:: interface_fitting.png
 
-
-Open file -- select file with column-formatted data to fit
-
-Plot button -- visualize data and compare it with theory
-
-
-
-
-Play button -- start fitting
-
-Stop button -- interrupt fitting
-
-ChiSq -- shows the obtained fitting quality parameter :math:`\chi^2` (see :class:mstm_studio.mstm_spectrum.SPR).
+- Кнопка «Open file» — выбор файла с данными в табличном формате.
+- Кнопка «Plot» — визуализация данных и сравнение с теоретическими значениями.
+- Кнопка «Play» — запуск аппроксимации.
+- Кнопка «Stop» — прерывание аппроксимации.
+- Поле «ChiSq» — показывает полученное значение параметра качества аппроксимации :math:`\chi^2`.
 
 .. image:: gui_fit.png
 
-Constraints button -- open new window with constraints options
+Кнопка «Constraints» — открывает окно с настройками ограничений.
 
-Empty constraints window:
-
-.. image:: gui_contraints_empty.png
-
-
-Example of possible constraints for core-shell nanoparticle:
+Пример возможных ограничений для наночастиц типа «ядро-оболочка»:
 
 .. image:: gui_contraints_coreshell.png
-
-For details consult :ref:`Constraints`
-

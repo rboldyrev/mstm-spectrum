@@ -1,15 +1,12 @@
 .. _gui:
 
-Manual: GUI
-===========
+Руководство: Графический интерфейс
+===================================
 
-
-Interactive graphical interface for calculation and analysis of optical extinction spectra.
-
+Интерактивный графический интерфейс для расчета и анализа спектров оптического экстинкции.
 
 .. toctree::
    gui_materials
    gui_spheres
    gui_other
    gui_fitting
-

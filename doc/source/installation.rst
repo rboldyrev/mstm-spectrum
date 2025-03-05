@@ -1,86 +1,77 @@
-
-
-
-Installation
+Установка
 ============
 
+Исходный код
+------------
 
-Source code
------------
+Исходный код Python-обертки доступен на GitHub <https://github.com/lavakyan/mstm-spectrum>. 
+Стабильная версия опубликована на PyPi <https://pypi.org/project/mstm-studio/>.
 
+Исходный код MSTM не включен и должен быть получен с <https://scattport.org/index.php/light-scattering-software/multiple-particle-scattering/468-mstm>. 
+MSTM Studio может быть запущен без бинарного файла MSTM, но с ограниченной функциональностью.
 
-Source code of Python wrapper is available on GitHub <https://github.com/lavakyan/mstm-spectrum>. 
-Stable version published on PyPi <https://pypi.org/project/mstm-studio/>.
-
-The source code of MSTM is not included and should be obtained from <https://scattport.org/index.php/light-scattering-software/multiple-particle-scattering/468-mstm>. 
-MSTM studio can be run without MSTM binary, but with restricted functionality.
-
-For non-spherical particles (currently available only spheroids) the ScatterPy library is used (See :ref:`binding-scatterpy`).
+Для не сферических частиц (в настоящее время доступны только сфероиды) используется библиотека ScatterPy (см. :ref:`binding-scatterpy`).
 
 
-Linux installation
+Установка на Linux
 ------------------
 
-
-Install from PyPi:
+Установка из PyPi:
 
 ``pip install mstm_studio``
 
-
-On systems without root access:
+На системах без прав root:
 
 ``pip install mstm_studio --user``
 
-
-Running GUI with 
+Запуск графического интерфейса:
 
 ``python -m mstm_studio``
 
+Может потребоваться явно указать версию Python, т.е. использовать ``pip3`` и ``python3`` в вышеуказанных командах.
 
-May be required to explicitely specify python version, i.e. use ``pip3`` and ``python3`` in above commands.
 
-
-Binding with MSTM
+Связывание с MSTM
 ^^^^^^^^^^^^^^^^^
 
-MSTM-studio will search for ``mstm.x`` binary in ``~/bin`` directory.
- 
-This can be altered by setting of `MSTM_BIN` environment variable, i.e. in bash:
+MSTM-studio будет искать бинарный файл ``mstm.x`` в директории ``~/bin``.
 
-``export $MSTM_BIN=~/my_compiled_mstm/mstm_v3.bin``
+Это можно изменить, установив переменную окружения `MSTM_BIN`, например, в bash:
+
+``export MSTM_BIN=~/my_compiled_mstm/mstm_v3.bin``
 
 
-.. Note::   MSTM can be compiled with gfortran as::
+.. Примечание::   MSTM может быть скомпилирован с помощью gfortran следующим образом::
       
     gfortran  mpidefs-serial.f90 mstm-intrinsics-v3.0.f90 mstm-modules-v3.0.f90 mstm-main-v3.0.f90 -O2  -o mstm.x
    
-   This is serial compilation, for parallel the file ``mpidefs-serial.f90`` should be replaced. Consult the MSTM website for details.
+   Это последовательная компиляция, для параллельной файл ``mpidefs-serial.f90`` должен быть заменен. Подробности см. на сайте MSTM.
 
 
-Windows installation
+Установка на Windows
 --------------------
 
-The tested way is using Anaconda Python distribution <https://www.anaconda.com/>. 
+Проверенный способ — использование дистрибутива Python Anaconda <https://www.anaconda.com/>. 
 
-1. Open "Anaconda Prompt". The new terminal window should pop up. 
-2. Type in ``pip install mstm_studio``. This may take a while since the dependent code will be downloaded and installed.
-3. Check GUI by typing ``python -m mstm_studio`` in Anaconda Prompt 
-   or check python scripting by typing ``import mstm_studio`` in python console.
+1. Откройте "Anaconda Prompt". Появится новое окно терминала. 
+2. Введите ``pip install mstm_studio``. Это может занять некоторое время, так как зависимый код будет загружен и установлен.
+3. Проверьте графический интерфейс, введя ``python -m mstm_studio`` в Anaconda Prompt, 
+   или проверьте работу сценариев Python, введя ``import mstm_studio`` в консоли Python.
 
 
-Binding with MSTM
+Связывание с MSTM
 ^^^^^^^^^^^^^^^^^
 
-4. Obtain the MSTM binary. Put it to some folder. 
-5. Setup environmental variable ``MSTM_BIN`` to point on the binary. 
-   The shell comannd ``SETX MSTM_BIN="path_to_your_mstm_bin"`` 
-   will do the temporary setup, which is useful for making ``*.cmd`` scripts. 
-   Permanent setup of environemnt variable should be done with graphical interface, see for example, 
+4. Получите бинарный файл MSTM. Поместите его в какую-либо папку. 
+5. Установите переменную окружения ``MSTM_BIN``, чтобы она указывала на бинарный файл. 
+   Команда оболочки ``SETX MSTM_BIN="path_to_your_mstm_bin"`` 
+   выполнит временную настройку, что полезно для создания ``*.cmd`` скриптов. 
+   Постоянная настройка переменной окружения должна быть выполнена с помощью графического интерфейса, см., например, 
    <https://docs.oracle.com/en/database/oracle/r-enterprise/1.5.1/oread/creating-and-modifying-environment-variables-on-windows.html>.
 
-.. Note:: If you write \*.cmd script to run gui, don't forget to update ``PATH`` variable to point on the Python distribution. 
-    The easist way is to type ``echo %PATH%`` in Anaconda Promt, and use the output in your script.
-    Example of GUI running script is:
+.. Примечание:: Если вы пишете \*.cmd скрипт для запуска графического интерфейса, не забудьте обновить переменную ``PATH``, чтобы она указывала на дистрибутив Python. 
+    Самый простой способ — ввести ``echo %PATH%`` в Anaconda Prompt и использовать вывод в вашем скрипте.
+    Пример скрипта для запуска графического интерфейса:
     
     .. code-block:: cmd
     
@@ -90,33 +81,33 @@ Binding with MSTM
         python.exe -m mstm_studio
         PAUSE
         
-    The last command (``PAUSE``) is put to prevent console windows from closing after program is ended.
+    Последняя команда (``PAUSE``) добавлена, чтобы предотвратить закрытие окна консоли после завершения программы.
 
 
 .. _binding-scatterpy:
 
-Binding with ScatterPy
+Связывание с ScatterPy
 ----------------------
 
-For calculation of extinction spectra of isolated non-sphericla particle ScatterPy can be used. This library is available on github <https://github.com/TCvanLeth/ScatterPy> and PiPy repository.
+Для расчета спектров экстинкции изолированных не сферических частиц может быть использована библиотека ScatterPy. Эта библиотека доступна на GitHub <https://github.com/TCvanLeth/ScatterPy> и в репозитории PyPi.
 
-Installation from PyPi: ``pip install scatterpy`` or ``pip install scatterpy --user``
+Установка из PyPi: ``pip install scatterpy`` или ``pip install scatterpy --user``
 
 
-ScatterPy without Numba
-^^^^^^^^^^^^^^^^^^^^^^^
+ScatterPy без Numba
+^^^^^^^^^^^^^^^^^^^
 
-ScatterPy requires Numba library for speeding up the calculation. However, it is possible to install without Numba:
+ScatterPy требует библиотеку Numba для ускорения расчетов. Однако, возможно установить ScatterPy без Numba:
 
-1. Download scatterpy source code
-2. Edit file ``scatterpy/special.py``.
-   Remove line:
+1. Скачайте исходный код ScatterPy.
+2. Отредактируйте файл ``scatterpy/special.py``.
+   Удалите строку:
    
    .. code-block:: python
    
         import numba as nb
    
-   and add lines:
+   и добавьте строки:
    
    .. code-block:: python
        
@@ -126,6 +117,4 @@ ScatterPy requires Numba library for speeding up the calculation. However, it is
            print('WARNING: Numba support is disabled in ScatterPy')
 
 
-3. Build and install: ``python setup.py install`` (Needed setuptools and may be other dev packages)
-
-
+3. Соберите и установите: ``python setup.py install`` (Требуется setuptools и, возможно, другие dev-пакеты)

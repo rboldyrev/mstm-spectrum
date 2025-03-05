@@ -2,15 +2,15 @@
 #
 # ----------------------------------------------------- #
 #                                                       #
-#  This code is a part of T-matrix fitting project      #
-#  Contributors:                                        #
+#  Этот код является частью проекта подгонки T-матрицы  #
+#  Вкладчики:                                           #
 #   L. Avakyan <laavakyan@sfedu.ru>                     #
 #   K. Yablunovskiy <kirill-yablunovskii@mail.ru>       #
 #                                                       #
 # ----------------------------------------------------- #
 """
-Contributions to UV/vis extinction spectra other
-then obtained from MSTM.
+Вклады в спектры экстинкции UV/vis, отличные от
+полученных с помощью MSTM.
 """
 from __future__ import print_function
 from __future__ import division
@@ -20,19 +20,19 @@ try:
 except:
     pass
 
-# use input in both python2 and python3
+# используем input как в python2, так и в python3
 try:
    input = raw_input
 except NameError:
    pass
-# use xrange in both python2 and python3
+# используем xrange как в python2, так и в python3
 try:
     xrange
 except NameError:
     xrange = range
 
 try:
-    from film_exctinction import gold_film_ex  # for gold film background
+    from film_exctinction import gold_film_ex  # для фонового вклада золотой пленки
 except:
     pass
 
@@ -44,22 +44,22 @@ except:
 
 class Contribution(object):
     """
-    Abstract class to include contributions other then
-    calculated by MSTM. All lightweight calculated
-    contribtions (constant background, lorentz and guass peaks, Mie, etc.)
-    should enhirit from it.
+    Абстрактный класс для включения вкладов, отличных от
+    рассчитанных с помощью MSTM. Все легковесные расчетные
+    вклады (постоянный фон, пики Лоренца и Гаусса, Ми и т.д.)
+    должны наследоваться от него.
     """
-    number_of_params = 0  # Should be another value in child class
+    number_of_params = 0  # Должно быть переопределено в дочернем классе
 
     def __init__(self, wavelengths=[], name='ExtraContrib'):
         """
-        Parameters:
+        Параметры:
 
-            wavelengths: list or numpy array
-                wavelengths in nm
+            wavelengths: список или массив numpy
+                длины волн в нм
 
-            name: string
-                optional label
+            name: строка
+                необязательная метка
 
         """
         self.name = name
@@ -67,44 +67,44 @@ class Contribution(object):
 
     def set_wavelengths(self, wavelengths):
         """
-        Modify wavelengths
+        Изменить длины волн
         """
         self.wavelengths = np.array(wavelengths)
 
     def calculate(self, values):
         """
-        This method should be overriden in child classes.
+        Этот метод должен быть переопределен в дочерних классах.
 
-        Parameters:
+        Параметры:
 
-            values: list of control parameters
+            values: список управляющих параметров
 
-        Return:
+        Возвращает:
 
-            numpy array of contribution values at specified wavelengths
+            массив numpy значений вклада на указанных длинах волн
         """
         self._check(values)
         return np.zeros(len(self.wavelengths))
 
     def _check(self, values):
         if len(values) < self.number_of_params:
-            raise Exception('Too few values! '+str(values))
+            raise Exception('Слишком мало значений! '+str(values))
 
     def plot(self, values, fig=None, axs=None):
         """
-        plot contribution
+        Построить график вклада
 
-        Parameters:
+        Параметры:
 
-            values: list of parameters
+            values: список параметров
 
-            fig: matplotlib figure
+            fig: фигура matplotlib
 
-            axs: matplotlib axes
+            axs: оси matplotlib
 
-        Return:
+        Возвращает:
 
-            filled/created fig and axs objects
+            созданные/заполненные объекты fig и axs
         """
         flag = fig is None
         if flag:
@@ -113,8 +113,8 @@ class Contribution(object):
         x = self.wavelengths
         y = self.calculate(values)
         axs.plot(x, y, 'g--', label=self.name)
-        axs.set_ylabel('Intensity')
-        axs.set_xlabel('Wavelength, nm')
+        axs.set_ylabel('Интенсивность')
+        axs.set_xlabel('Длина волны, нм')
         axs.legend()
         if flag:
             plt.show()
@@ -123,19 +123,19 @@ class Contribution(object):
 
 class ConstantBackground(Contribution):
     """
-    Constant background contribution :math:`f(\lambda) = bkg`.
+    Постоянный фоновый вклад :math:`f(\lambda) = bkg`.
     """
     number_of_params = 1
 
     def calculate(self, values):
         """
-        Parameters:
+        Параметры:
 
             values: [bkg]
 
-        Return:
+        Возвращает:
 
-            numpy array
+            массив numpy
         """
         self._check(values)
         return values[0] * np.ones(len(self.wavelengths))
@@ -143,19 +143,19 @@ class ConstantBackground(Contribution):
 
 class LinearBackground(Contribution):
     """
-    Two-parameter background :math:`f(\lambda) = a \cdot \lambda + b`.
+    Двухпараметрический фон :math:`f(\lambda) = a \cdot \lambda + b`.
     """
     number_of_params = 2
 
     def calculate(self, values):
         """
-        Parameters:
+        Параметры:
 
-            values: list of control parameters `scale`, `mu` and `Gamma`
+            values: список управляющих параметров `scale`, `mu` и `Gamma`
 
-        Return:
+        Возвращает:
 
-            numpy array
+            массив numpy
         """
         self._check(values)
         return values[0] + values[1] * self.wavelengths
@@ -163,7 +163,7 @@ class LinearBackground(Contribution):
 
 class LorentzPeak(Contribution):
     """
-    Lorentz function
+    Функция Лоренца
 
     .. math::
 
@@ -174,13 +174,13 @@ class LorentzPeak(Contribution):
 
     def calculate(self, values):
         """
-        Parameters:
+        Параметры:
 
-            values: list of control parameters `scale`, `mu` and `Gamma`
+            values: список управляющих параметров `scale`, `mu` и `Gamma`
 
-        Return:
+        Возвращает:
 
-            numpy array
+            массив numpy
         """
         self._check(values)
         return values[0] / ((self.wavelengths - values[1])**2 + (values[2])**2)
@@ -188,7 +188,7 @@ class LorentzPeak(Contribution):
 
 class GaussPeak(Contribution):
     """
-    Gauss function
+    Функция Гаусса
 
     .. math::
 
@@ -199,13 +199,13 @@ class GaussPeak(Contribution):
 
     def calculate(self, values):
         """
-        Parameters:
+        Параметры:
 
-            values: list of control parameters `scale`, `mu` and `sigma`
+            values: список управляющих параметров `scale`, `mu` и `sigma`
 
-        Return:
+        Возвращает:
 
-            numpy array
+            массив numpy
         """
         self._check(values)
         return values[0] * np.exp(-(self.wavelengths - values[1])**2 / (2 * values[2]**2))
@@ -213,7 +213,7 @@ class GaussPeak(Contribution):
 
 class LorentzBackground(Contribution):
     """
-    Lorentz peak in background. Peak center is fixed.
+    Пик Лоренца на фоне. Центр пика фиксирован.
 
     .. math::
 
@@ -230,7 +230,7 @@ class LorentzBackground(Contribution):
 
 class FilmBackground(Contribution):
     """
-    Background interpolated from experimental spectra of gold foil
+    Фон, интерполированный из экспериментальных спектров золотой пленки
     """
     number_of_params = 3
 
@@ -242,27 +242,27 @@ class FilmBackground(Contribution):
 
 class MieSingleSphere(Contribution):
     """
-    Mie contribution from single sphere.
+    Вклад Ми от одной сферы.
 
-    Details are widely discusses, see, for example [Kreibig_book1995]_
+    Подробности широко обсуждаются, см., например, [Kreibig_book1995]_
     """
     number_of_params = 2
-    material = None  # instance of mstm_spectrum.Material
-    matrix = 1.0     # medium refractive index
+    material = None  # экземпляр mstm_spectrum.Material
+    matrix = 1.0     # показатель преломления среды
 
     def calculate(self, values):
         """
-        Parameters:
+        Параметры:
 
-            values: list of control parameters `scale`, `diameter`
+            values: список управляющих параметров `scale`, `diameter`
 
-        Return:
+        Возвращает:
 
-            extinction efficiency array of Mie sphere
+            массив эффективности экстинкции Ми для сферы
         """
         self._check(values)
         if self.material is None:
-            raise Exception('Mie calculation requires material data. Stop.')
+            raise Exception('Для расчета Ми требуются данные о материале. Остановка.')
         D = np.abs(values[1])
         self.material.D = D
         _, _, mie_extinction, _ = calculate_mie_spectra(
@@ -271,26 +271,26 @@ class MieSingleSphere(Contribution):
 
     def set_material(self, material, matrix=1.0):
         """
-        Define the material of sphere and environment
+        Определить материал сферы и окружающей среды
 
-        Parameters:
+        Параметры:
 
-            material: Material object
-                material of the sphere
+            material: объект Material
+                материал сферы
 
-            matrix: float, string or Material object
-                material of the environment
+            matrix: float, строка или объект Material
+                материал окружающей среды
 
-        Return:
+        Возвращает:
 
-            True if properties were changed, False - otherwise.
+            True, если свойства были изменены, False - в противном случае.
 
         """
         changed = False
         try:
             matr = float(matrix)
         except:
-            matr = matrix.get_n(550)  # assume it is Material instance
+            matr = matrix.get_n(550)  # предполагаем, что это экземпляр Material
         if matr != self.matrix:
             self.matrix = matr
             changed = True
@@ -298,7 +298,7 @@ class MieSingleSphere(Contribution):
             material.get_n(550)
             material.get_k(550)
         except:
-            raise Exception('Bad material object')
+            raise Exception('Некорректный объект материала')
         if material is not self.material:
             self.material = material
             changed = True
@@ -307,8 +307,8 @@ class MieSingleSphere(Contribution):
 
 class MieLognormSpheres(MieSingleSphere):
     """
-    Mie contribution from an ensemble of spheres
-    with sizes distributed by Log-Normal law
+    Вклад Ми от ансамбля сфер
+    с размерами, распределенными по логнормальному закону
     """
     number_of_params = 3
     diameters = np.logspace(0, 3, 301)
@@ -316,7 +316,7 @@ class MieLognormSpheres(MieSingleSphere):
 
     def lognorm(self, x, mu, sigma):
         """
-        The shape of Log-Normal distribution:
+        Форма логнормального распределения:
 
         .. math::
 
@@ -326,41 +326,41 @@ class MieLognormSpheres(MieSingleSphere):
 
     def calculate(self, values):
         """
-        Parameters:
+        Параметры:
 
-            values: list of control parameters `scale`, `mu` and `sigma`
+            values: список управляющих параметров `scale`, `mu` и `sigma`
 
-        Return:
+        Возвращает:
 
-            Mie extinction efficiency of log-normally distributed spheres
+            эффективность экстинкции Ми для логнормально распределенных сфер
         """
         self._check(values)
         dD = np.ediff1d(self.diameters, to_begin=1e-3)
         distrib = self.lognorm(self.diameters, np.abs(values[1]), np.abs(values[2]))
         result = np.zeros_like(self.wavelengths)
         for diameter, count in zip(self.diameters, distrib*dD):
-            self.number_of_params = 2  # else will get error on a check
+            self.number_of_params = 2  # иначе получим ошибку при проверке
             mie_ext = super(MieLognormSpheres, self).calculate(values=[1.0, diameter])
-            self.number_of_params = 3  # ugly, but everything has a price
-            result += count * mie_ext * D**2  # effic. -> cross-section
+            self.number_of_params = 3  # некрасиво, но за все надо платить
+            result += count * mie_ext * D**2  # эффективность -> сечение
         av_diameter = np.sum(self.diameters * distrib * dD) / np.sum(distrib * dD)
         return values[0] * result / av_diameter**2
 
     def plot_distrib(self, values, fig=None, axs=None):
         """
-        Plot size distribution
+        Построить график распределения размеров
 
-        Parameters:
+        Параметры:
 
-            values: list of control parameters
+            values: список управляющих параметров
 
-            fig: matplotlib figure
+            fig: фигура matplotlib
 
-            axs: matplotlib axes
+            axs: оси matplotlib
 
-        Return:
+        Возвращает:
 
-            filled/created fig and axs objects
+            созданные/заполненные объекты fig и axs
         """
         flag = fig is None
         if flag:
@@ -369,8 +369,8 @@ class MieLognormSpheres(MieSingleSphere):
         x = self.diameters[self.diameters < self.MAX_DIAMETER_TO_PLOT]
         y = self.lognorm(x, np.abs(values[1]), np.abs(values[2]))
         axs.plot(x, y, 'b', label=self.name)
-        axs.set_ylabel('Count')
-        axs.set_xlabel('Diameter, nm')
+        axs.set_ylabel('Количество')
+        axs.set_xlabel('Диаметр, нм')
         axs.legend()
         if flag:
             plt.show()
@@ -379,39 +379,39 @@ class MieLognormSpheres(MieSingleSphere):
     def set_material(self, material, matrix=1.0):
         print('matrix: %s' % matrix)
         if super().set_material(material, matrix):
-            self._M = None  # clear cache if changed materials
+            self._M = None  # очистить кэш при изменении материалов
 
 
 class MieLognormSpheresCached(MieLognormSpheres):
     """
-    Mie contribution from an ensemble of spheres
-    with sizes distributed by Lognormal law.
+    Вклад Ми от ансамбля сфер
+    с размерами, распределенными по логнормальному закону.
 
-    Cached version - use it to speed-up fitting.
+    Кэшированная версия - используйте для ускорения подгонки.
     """
     number_of_params = 3
     diameters = np.logspace(0, 3, 301)
     MAX_DIAMETER_TO_PLOT = 100
-    _M = None  # cache matrix, None after initialization
+    _M = None  # кэшированная матрица, None после инициализации
 
     def calculate(self, values):
         """
-        Parameters:
+        Параметры:
 
-            values: list of control parameters `scale`, `mu` and `sigma`
+            values: список управляющих параметров `scale`, `mu` и `sigma`
 
-        Return:
+        Возвращает:
 
-            Mie extinction efficiency of log-normally distributed spheres
+            эффективность экстинкции Ми для логнормально распределенных сфер
         """
         self._check(values)
-        if self._M is None:  # initialize cache matrix
+        if self._M is None:  # инициализация кэшированной матрицы
             print('Building cache...')
             self._M = np.zeros(shape=(len(self.wavelengths), len(self.diameters)))
-            self.number_of_params = 2  # else will get error on a check
+            self.number_of_params = 2  # иначе получим ошибку при проверке
             for i, diameter in enumerate(self.diameters):
-                self._M[:, i] = super(MieLognormSpheres, self).calculate(values=[1.0, diameter])  # D or D/2 ?
-            self.number_of_params = 3  # ugly, but everything has a price
+                self._M[:, i] = super(MieLognormSpheres, self).calculate(values=[1.0, diameter])  # D или D/2 ?
+            self.number_of_params = 3  # некрасиво, но за все надо платить
             print('Building cache... done')
 
         dD = np.ediff1d(self.diameters, to_begin=1e-3)
@@ -421,7 +421,7 @@ class MieLognormSpheresCached(MieLognormSpheres):
 
 
 if __name__=='__main__':
-    # tests come here
+    # тесты здесь
     # ~ cb = ConstantBackground(name='const', wavelengths=[300,400,500,600,700,800])
     # ~ print(cb.calculate([3]))
     # ~ cb.plot([3])
@@ -433,4 +433,3 @@ if __name__=='__main__':
     mie.set_material(AlloyAuAg(x_Au=1), 1.66)
     mie.plot([1,1.5,0.5])  # scale mu sigma
     print('See you!')
-

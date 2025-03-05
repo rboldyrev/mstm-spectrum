@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
 #-----------------------------------------------------#
 #                                                     #
-# This code is a part of T-matrix fitting project     #
-# Contributors:                                       #
+# Этот код является частью проекта подбора T-матрицы  #
+# Вкладчики:                                          #
 #  L. Avakyan <laavakyan@sfedu.ru>                    #
 #  A. Skidanenko <ann.skidanenko@ya.ru>               #
 #                                                     #
 #-----------------------------------------------------#
 """
-  Fitting of particle aggreagate T-matrix spectrum
-  to experimental SPR spectrum.
+  Подбор спектра T-матрицы агрегата частиц
+  к экспериментальному спектру SPR.
 """
 from __future__ import print_function
 import os
@@ -26,12 +26,12 @@ try:
 except:
     pass
 
-# use input in both python2 and python3
+# использование input в Python2 и Python3
 try:
    input = raw_input
 except NameError:
    pass
-# use xrange in both python2 and python3
+# использование xrange в Python2 и Python3
 try:
     xrange
 except NameError:
@@ -39,41 +39,41 @@ except NameError:
 
 class Parameter(object):
     """
-    Class for parameter object used for storage of
-    parameter's name, value and variation limits.
+    Класс для объекта параметра, используемого для хранения
+    имени параметра, его значения и пределов вариации.
 
-    Parameter naming conventions:
+    Соглашения по именованию параметров:
 
-        `scale` - outer common multiplier
+        `scale` - внешний общий множитель
 
-        `ext%i` - extra parameter, like background, peaks or Mie contributions
+        `ext%i` - дополнительный параметр, например, фон, пики или вклады Ми
 
-        `a%i` - sphere radius
+        `a%i` - радиус сферы
 
-        `x%i`, `y%i`, `z%i` - coordinates of sphere center
+        `x%i`, `y%i`, `z%i` - координаты центра сферы
 
-    where `%i` is a number (0, 1, 2, ...)
+    где `%i` - это число (0, 1, 2, ...)
     """
     def __init__(self, name, value=1, min=None, max=None, internal_loop=False):
         """
-        Parameters:
+        Параметры:
 
-            name: string
-                name of parameter used for constraints etc
+            name: строка
+                имя параметра, используемое для ограничений и т.д.
 
             value: float
-                initial value of parameter
+                начальное значение параметра
 
             min, max: float
-                bounds for parameter variation (optional)
+                границы вариации параметра (опционально)
 
             internal_loop : bool
-                if `True` the parameter will be allowed to vary in internal
-                (fast) loop, which does not require MSTM recalculation.
-                Note: this flag will be removed in future.
+                если `True`, параметр будет разрешен для вариации во внутреннем
+                (быстром) цикле, который не требует пересчета MSTM.
+                Примечание: этот флаг будет удален в будущем.
 
             varied: bool
-                if `True` -- will be changed during fit
+                если `True` - будет изменяться в процессе подбора
         """
         self.name = name
         self.value = self.ini_value = value
@@ -89,14 +89,14 @@ class Parameter(object):
 
 class Constraint(object):
     """
-    Abstract constraint class. All other should inherit from it.
+    Абстрактный класс ограничения. Все остальные должны наследоваться от него.
     """
     def apply(self, params):
         """
-        Modify the params dict
-        according to given constranint algorithm.
+        Изменяет словарь params
+        в соответствии с заданным алгоритмом ограничения.
 
-        Note: Abstract method!
+        Примечание: Абстрактный метод!
         """
         pass
 
@@ -104,21 +104,21 @@ class Constraint(object):
 class FixConstraint(Constraint):
     def __init__(self, prm, value=None):
         """
-        Fix value of parameter with name `prm` to `value`.
+        Фиксирует значение параметра с именем `prm` на значении `value`.
 
-        Parameters:
+        Параметры:
 
-            prm: string
-                parameter name
+            prm: строка
+                имя параметра
 
             value: float
-                if `None` than initial value will be used.
+                если `None`, то будет использовано начальное значение.
         """
         self.prm = prm.lower()
         self.value = value
 
     def apply(self, params):
-        """ Apply fix constraint """
+        """ Применяет фиксирующее ограничение """
         assert self.prm in params
         if self.value is not None:
             params[self.prm].value = self.value
@@ -128,13 +128,13 @@ class FixConstraint(Constraint):
 class EqualityConstraint(Constraint):
     def __init__(self, prm1, prm2):
         """
-        Fix two parameters with names `prm1` and `prm2` being equal
+        Фиксирует два параметра с именами `prm1` и `prm2` равными друг другу
         """
         self.prm1 = prm1.lower()
         self.prm2 = prm2.lower()
 
     def apply(self, params):
-        """ Apply equality constraint """
+        """ Применяет ограничение равенства """
         assert self.prm1 in params
         assert self.prm2 in params
         params[self.prm2].value = params[self.prm1].value
@@ -144,16 +144,16 @@ class EqualityConstraint(Constraint):
 class ConcentricConstraint(Constraint):
     def __init__(self, i1, i2):
         """
-        Two spheres with common centers.
+        Две сферы с общими центрами.
 
-        `i1` and `i2` -- indexes of spheres
+        `i1` и `i2` -- индексы сфер
         """
         self.constraints = [EqualityConstraint('x%02i'%i1, 'x%02i'%i2),
                             EqualityConstraint('y%02i'%i1, 'y%02i'%i2),
                             EqualityConstraint('z%02i'%i1, 'z%02i'%i2)]
 
     def apply(self, params):
-        """ Apply concentric constraint """
+        """ Применяет ограничение концентричности """
         for c in self.constraints:
             c.apply(params)
 
@@ -161,14 +161,14 @@ class ConcentricConstraint(Constraint):
 class RatioConstraint(Constraint):
     def __init__(self, prm1, prm2, ratio=1):
         """
-        Maintain ratio of two variables, `prm1`/`prm2` = `ratio`
+        Поддерживает соотношение двух переменных, `prm1`/`prm2` = `ratio`
         """
         self.prm1 = prm1.lower()
         self.prm2 = prm2.lower()
         self.set_ratio(ratio)
 
     def apply(self, params):
-        """ Apply Ratio constraint """
+        """ Применяет ограничение соотношения """
         assert self.prm1 in params
         assert self.prm2 in params
         params[self.prm2].value = params[self.prm1].value / self.ratio
@@ -176,7 +176,7 @@ class RatioConstraint(Constraint):
 
     def set_ratio(self, ratio):
         """
-        Set ratio of :math:`prm1/prm2 = ratio`.
+        Устанавливает соотношение :math:`prm1/prm2 = ratio`.
         """
         assert np.abs(ratio) > 1e-10
         self.ratio = ratio
@@ -184,46 +184,46 @@ class RatioConstraint(Constraint):
 
 class Fitter(threading.Thread):
     """
-    Class to perform fit of experimental Exctinction spectrum
+    Класс для выполнения подбора экспериментального спектра экстинкции
 
-    Field:
+    Поле:
 
         tolerance: float
-            stopping criterion, default is 1e-4
+            критерий остановки, по умолчанию 1e-4
     """
 
-    tolerance = 1e-4  # stopping criterion
+    tolerance = 1e-4  # критерий остановки
 
     def __init__(self, exp_filename, wl_min=300, wl_max=800, wl_npoints=51,
                  extra_contributions=None, plot_progress=False):
         """
-        Parameters:
+        Параметры:
 
-            exp_filename: str
-                name of file with experimental data
+            exp_filename: строка
+                имя файла с экспериментальными данными
 
             wl_min, wl_max: float
-                wavelength bounds for fitting (in nm).
+                границы длин волн для подбора (в нм).
 
             wl_npoints: int
-                number of wavelengths where spectra will be calcualted and compared.
+                количество длин волн, на которых будут рассчитываться и сравниваться спектры.
 
-            extra_contributions: list of Contribution objects
-                If `None`, then ConstantBackground will be used.
-                Assuming that first element is a background.
-                If you don't want any extra contribution, set to empty list `[]`.
+            extra_contributions: список объектов Contribution
+                Если `None`, то будет использован ConstantBackground.
+                Предполагается, что первый элемент - это фон.
+                Если вы не хотите использовать дополнительные вклады, установите пустой список `[]`.
 
             plot_progress: bool
-                Show fitting progress using matplotlib.
-                Should be turned off when run on parallel cluster without gui.
+                Показывать прогресс подбора с использованием matplotlib.
+                Должно быть отключено при запуске на параллельном кластере без графического интерфейса.
         """
         super(Fitter, self).__init__()
-        self._stop_event = threading.Event()  # to be able to stop outside
+        self._stop_event = threading.Event()  # для возможности остановки извне
 
         self.exp_filename = exp_filename
-        data = np.loadtxt(self.exp_filename)    # load data
-        data = data[np.argsort(data[:,0]),:]    # sort by 0th column
-        if np.max(data[:,0]) < 10:      # if values are really low
+        data = np.loadtxt(self.exp_filename)    # загрузка данных
+        data = data[np.argsort(data[:,0]),:]    # сортировка по 0-му столбцу
+        if np.max(data[:,0]) < 10:      # если значения действительно низкие
             print('WARNING: Data X column is probably in mum, automatilcally rescaling to nm.')
             data[:,0] = data[:,0] * 1000
 
@@ -233,19 +233,19 @@ class Fitter(threading.Thread):
         print('Wavelength limits are setted to: %f < wl < %f'% (self.wl_min, self.wl_max))
         self.wls, self.exp = self._rebin(self.wl_min, self.wl_max, self.wl_npoints,
                                          data[:,0], data[:,1])
-        self.params = {}             # dictionaty of parameters objects
-        self.spheres = None          # object of Spheres
-        self.constraints = []        # list of Constraint objects
-        self.calc = np.zeros_like(self.wls)  # calculated spectrum
-        self.chisq = -1              # chi square (squared residual)
-        # set scale as default
+        self.params = {}             # словарь объектов параметров
+        self.spheres = None          # объект сфер
+        self.constraints = []        # список объектов ограничений
+        self.calc = np.zeros_like(self.wls)  # рассчитанный спектр
+        self.chisq = -1              # хи-квадрат (квадрат невязки)
+        # установка масштаба по умолчанию
         self.set_scale()
-        # add extra contributions
+        # добавление дополнительных вкладов
         self.extra_contributions = []
         self.set_extra_contributions(extra_contributions)
-        # set matrix material as default
+        # установка материала матрицы по умолчанию
         self.set_matrix()
-        # plot, if specified
+        # отображение прогресса, если указано
         self.plot_progress = plot_progress
         if self.plot_progress:
             plt.ion()
@@ -254,13 +254,13 @@ class Fitter(threading.Thread):
             ax.plot(self.wls, self.exp, 'ro')
             self.line1, = ax.plot(self.wls, self.calc, 'b-')
             self.fig.canvas.draw()
-            #~ self.lock = threading.Lock()  # used to sync with main thread where plot
-        # callback function supplied outside
+            #~ self.lock = threading.Lock()  # используется для синхронизации с основным потоком, где происходит отрисовка
+        # функция обратного вызова, задаваемая извне
         self._cbuser = None
 
     def _rebin(self, xmin, xmax, N, x, y):
         """
-        hidden method used to rebin data to uniform scale
+        Скрытый метод, используемый для пересчета данных на равномерную шкалу
         """
         f = interpolate.interp1d(x, y)
         xnew = np.linspace(xmin, xmax, N)
@@ -273,11 +273,11 @@ class Fitter(threading.Thread):
 
     def set_matrix(self, material='AIR'):
         """
-        set refraction index of matrix material
+        Устанавливает показатель преломления материала матрицы
 
-        material : {'AIR'|'WATER'|'GLASS'} or float
-            the name of material or
-            refraction index value.
+        material : {'AIR'|'WATER'|'GLASS'} или float
+            название материала или
+            значение показателя преломления.
         """
         self.MATRIX_MATERIAL = material
 
@@ -290,15 +290,15 @@ class Fitter(threading.Thread):
 
     def set_extra_contributions(self, contributions, initial_values=None):
         """
-        Add extra contributions and initialize corresponding params.
+        Добавляет дополнительные вклады и инициализирует соответствующие параметры.
 
-        Parameters:
+        Параметры:
 
-            contributions: list of Contribution objests
+            contributions: список объектов Contribution
 
-            initial_values: float array
+            initial_values: массив float
         """
-        # remove old parameters
+        # удаление старых параметров
         i_tot = 0
         for contribution in self.extra_contributions:
             if contribution is not None:
@@ -311,7 +311,7 @@ class Fitter(threading.Thread):
             contributions = [ConstantBackground(self.wls, 'ConstBkg')]
         self.extra_contributions = contributions[:]
 
-        # create new parameter objects
+        # создание новых объектов параметров
         n_tot = 0
         i_tot = 0
         for contribution in self.extra_contributions:
@@ -331,14 +331,14 @@ class Fitter(threading.Thread):
 
     def set_spheres(self, spheres):
         """
-        Specify the spheres to be fit.
+        Задает сферы для подбора.
 
-        Paramerer:
+        Параметр:
 
-            spheres: list of mstm_spectrum.Sphere objects
-                If `None` then MSTM will not be run.
+            spheres: список объектов mstm_spectrum.Sphere
+                Если `None`, то MSTM не будет запущен.
         """
-        if self.spheres is not None:  # remove parameters of old spheres
+        if self.spheres is not None:  # удаление параметров старых сфер
             for i in xrange(self.spheres.N):
                 self.params.pop('a%02i' % i)
                 self.params.pop('x%02i' % i)
@@ -352,11 +352,11 @@ class Fitter(threading.Thread):
                 self.params['y%02i' % i] = Parameter('y%02i' % i, self.spheres.y[i])
                 self.params['z%02i' % i] = Parameter('z%02i' % i, self.spheres.z[i])
         else:
-            self.set_spheres(ExplicitSpheres())  # empty spheres object
+            self.set_spheres(ExplicitSpheres())  # пустой объект сфер
 
     def _update_spheres(self):
         """
-        Set spheres radii and positions to values from params dict
+        Устанавливает радиусы и положения сфер в соответствии со значениями из словаря params
         """
         assert self.spheres is not None
         for i in xrange(len(self.spheres)):
@@ -367,26 +367,26 @@ class Fitter(threading.Thread):
 
     def _update_params(self, values, internal=False):
         """
-        Put values from optimized to params
+        Устанавливает значения из оптимизированных параметров в params
 
         internal : bool
-            if True than internal variables will be updated (scale, bkg, ..)
+            если True, то будут обновлены внутренние переменные (масштаб, фон, ..)
         """
-        try:  # if not iterable (single value in values)
+        try:  # если не итерируемый (одно значение в values)
             len(values)
         except:
             print('WARNING: values is not a list')
             values = [values]
-        if internal:  # internal (fast) loop parameters
+        if internal:  # внутренние (быстрые) параметры цикла
             self.params['scale'].value = values[0]
             for i in range(self.extra_contrib_params_count):
-                self.params['ext%02i' % i].value = values[i+1]  # 0th is scale
+                self.params['ext%02i' % i].value = values[i+1]  # 0-й - это масштаб
             print('inner: ', (self.extra_contrib_params_count+1), values)
         else:
-            # apply constraints, -- up to now works only for MSTM
-            for c in self.constraints:  # apply before
+            # применение ограничений, -- пока работает только для MSTM
+            for c in self.constraints:  # применение до
                 c.apply(self.params)
-            # update params
+            # обновление параметров
             i_tot = 0
             for i in range(len(self.spheres)):
                 for key in ('a%02i'%i,'x%02i'%i,'y%02i'%i,'z%02i'%i):
@@ -394,19 +394,19 @@ class Fitter(threading.Thread):
                         self.params[key].value = values[i_tot]
                         i_tot += 1
             assert i_tot == len(values)
-            for c in self.constraints:  # and apply after
+            for c in self.constraints:  # и применение после
                 c.apply(self.params)
             self.report_result(msg='[%s] Scale: %.3f Bkg: %.2f\n' % (str(datetime.now()),
-                self.params['scale'].value, self.params['ext00'].value))  # may be verbous!
+                self.params['scale'].value, self.params['ext00'].value))  # может быть многословным!
 
     def add_constraint(self, cs):
         """
-        Adds constraints on the parameters.
-        Usefull for the case of core-shell and layered structures.
+        Добавляет ограничения на параметры.
+        Полезно для случая структур с оболочкой и слоистых структур.
 
-        Parameter:
+        Параметр:
 
-            cs: Contraint object or list of Contraint objects
+            cs: объект Contraint или список объектов Contraint
         """
         try:
             _ = iter(cs)
@@ -417,7 +417,7 @@ class Fitter(threading.Thread):
 
     def _get_spectrum(self):
         """
-        Calculate the spectrum of agglomerates using mstm_spectrum module.
+        Вычисляет спектр агрегатов с использованием модуля mstm_spectrum.
         """
         if self.stopped():
             raise Exception('Fitting interrupted')
@@ -434,30 +434,30 @@ class Fitter(threading.Thread):
                 _, extinction = spr.simulate()
                 self.result = np.array(extinction)
             except SpheresOverlapError as e:
-                self.chisq = 666  # big evil value
+                self.chisq = 666  # большое злое значение
                 return np.zeros_like(self.wls)
             except Exception as e:
-                print(e)  # let User decide
+                print(e)  # пусть пользователь решает
                 raise e
             #~ finally:
                 #~ self.lock.release()
-        else:  # emty spheres list
+        else:  # пустой список сфер
             self.result = np.zeros_like(self.wls)
 
-        # perform fast fit over internal variables (scale, bkg, ..)
+        # выполнение быстрого подбора по внутренним переменным (масштаб, фон, ..)
         values_internal = []
         values_internal.append(self.params['scale'].value)
         for i in range(self.extra_contrib_params_count):
             values_internal.append(self.params['ext%02i' % i].value)
 
         def _target_func_int(values):
-            """ target function for internal fit (fast loop) """
+            """ целевая функция для внутреннего подбора (быстрый цикл) """
             self._update_params(values, internal=True)
 
             y_dat = self.exp
             assert self.params['scale'].value == values[0]
             y_fit = values[0] * self.result
-            n_tot = 1  # scale is values[0]
+            n_tot = 1  # масштаб - это values[0]
             for contribution in self.extra_contributions:
                 n = contribution.number_of_params
                 y_fit += contribution.calculate(values[n_tot:n_tot+n])
@@ -476,7 +476,7 @@ class Fitter(threading.Thread):
         self._update_params(values_internal, internal=True)
 
         self.calc = self.params['scale'].value * self.result
-        n_tot = 1  # 0th is scale
+        n_tot = 1  # 0-й - это масштаб
         for contribution in self.extra_contributions:
             n = contribution.number_of_params
             self.calc += contribution.calculate(values_internal[n_tot:n_tot+n])
@@ -485,14 +485,14 @@ class Fitter(threading.Thread):
 
     def get_extra_contributions(self):
         '''
-        Return a list of current extra contributions to the spectrum
+        Возвращает список текущих дополнительных вкладов в спектр
         '''
         result = []
         values_internal = []
         values_internal.append(self.params['scale'].value)
         for i in range(self.extra_contrib_params_count):
             values_internal.append(self.params['ext%02i' % i].value)
-        n_tot = 1  # scale is values[0]
+        n_tot = 1  # масштаб - это values[0]
         for contribution in self.extra_contributions:
             n = contribution.number_of_params
             result.append(contribution.calculate(values_internal[n_tot:n_tot+n]))
@@ -500,7 +500,7 @@ class Fitter(threading.Thread):
         return result
 
     def _target_func(self, values):
-        """ main target function """
+        """ основная целевая функция """
         self._update_params(values)
 
         y_dat = self.exp
@@ -514,30 +514,30 @@ class Fitter(threading.Thread):
 
     def set_callback(self, func):
         """
-        Set callback function which will be called on
-        each step of outer optimization loop.
+        Устанавливает функцию обратного вызова, которая будет вызываться на
+        каждом шаге внешнего цикла оптимизации.
 
-        Parameter:
+        Параметр:
 
-            func: function(values)
-                where values -- list of values passed from optimization routine
+            func: функция(values)
+                где values -- список значений, передаваемых из оптимизационной процедуры
         """
         self._cbuser = func
 
     def _cbplot(self, values):
         """
-        callback function
+        функция обратного вызова
         """
-        #~ self.lock.acquire()  # will wait here
+        #~ self.lock.acquire()  # будет ждать здесь
         #~ try:
         #print('Scale: %0.3f Bkg: %0.3f ChiSq: %.8f'% (self.params['scale'].value,
         #      self.params['bkg0'].value, self.chisq) )
-        if self._cbuser is not None:  # call user-supplied function
+        if self._cbuser is not None:  # вызов пользовательской функции
             self._cbuser(self, values)
         if self.plot_progress:
             self.line1.set_ydata(self.calc)
             self.fig.canvas.draw()
-            #~ plt.pause(0.05)  # this lead of grabbing of the focus by the plot window
+            #~ plt.pause(0.05)  # это приводит к захвату фокуса окном графика
             self.fig.canvas.start_event_loop(0.05)
             #from:
             #https://stackoverflow.com/questions/45729092/make-interactive-matplotlib-window-not-pop-to-front-on-each-update-windows-7
@@ -560,20 +560,20 @@ class Fitter(threading.Thread):
 
     def run(self, maxsteps=400):
         """
-        Start fitting.
+        Запускает подбор.
 
-        Parameters:
+        Параметры:
             maxsteps: int
-                limits number of steps performed
+                ограничивает количество выполняемых шагов
         """
         self._apply_constraints()
-        # pack parameters to values
+        # упаковка параметров в values
         values = []
         for i in range(len(self.spheres)):
             for key in ('a%02i'%i,'x%02i'%i,'y%02i'%i,'z%02i'%i):
                 if self.params[key].varied:
                     values.append(self.params[key].value)
-        # run optimizer
+        # запуск оптимизатора
         result = so.minimize(fun=self._target_func, x0=values, method='Powell', tol=self.tolerance,
                              options={'maxiter':maxsteps, 'disp':True}, callback=self._cbplot)
         self._update_params(result.x)
@@ -587,17 +587,17 @@ class Fitter(threading.Thread):
 
     def report_freedom(self):
         """
-        Returns string with short summary before fitting
+        Возвращает строку с кратким описанием перед подбором
         """
         self._apply_constraints()
         N = len(self.spheres)
-        s = 'Number of spheres:\t%i\n' % N
+        s = 'Количество сфер:\t%i\n' % N
         n_tot = 0
         for contribution in self.extra_contributions:
             n = contribution.number_of_params
-            s += 'Extra contrib. %s with %i params\n' % (contribution.name, n)
+            s += 'Дополнительный вклад %s с %i параметрами\n' % (contribution.name, n)
             n_tot += n
-        s += 'Total number of extra params:\t%i\n' % n_tot
+        s += 'Общее количество дополнительных параметров:\t%i\n' % n_tot
         n_fast = n_slow = n_fix = 0
         for key in self.params:
             if self.params[key].varied:
@@ -605,32 +605,32 @@ class Fitter(threading.Thread):
                     n_fast += 1
                 else:
                     n_slow += 1
-            else: # not varied
+            else: # не изменяется
                 n_fix += 1
         assert n_fast + n_slow + n_fix == 1 + 4*N + n_tot
-        s += 'Degrees of freedom\n'
-        s += '\tfast loop:\t%i\n' % n_fast
-        s += '\tslow loop:\t%i\n' % n_slow
+        s += 'Степени свободы\n'
+        s += '\tбыстрый цикл:\t%i\n' % n_fast
+        s += '\tмедленный цикл:\t%i\n' % n_slow
         print(s)
         return s
 
     def report_result(self, msg=None):
         """
-        Returns string with short summary of fitting results
+        Возвращает строку с кратким описанием результатов подбора
         """
-        s = 'ChiSq:\t%f\n' % self.chisq
+        s = 'Хи-квадрат:\t%f\n' % self.chisq
         if msg is None:
-            s += 'Optimal parameters'
+            s += 'Оптимальные параметры'
         else:
             s += msg
         for key in sorted(self.params):
-            s += '\n\t%s:\t%f\t(Varied:%s)' % (key, self.params[key].value, str(self.params[key].varied))
+            s += '\n\t%s:\t%f\t(Изменяемый:%s)' % (key, self.params[key].value, str(self.params[key].varied))
         print(s)
         return s
 
 if __name__ == '__main__':
     fitter = Fitter('../example/experiment.dat')
-    # test Mie fit
+    # тест подбора Ми
     from mstm_studio.contributions import LinearBackground, MieSingleSphere, MieLognormSpheresCached
     from mstm_studio.alloy_AuAg import AlloyAuAg
     fitter.set_extra_contributions([LinearBackground(fitter.wls, 'lin bkg'),
@@ -644,7 +644,7 @@ if __name__ == '__main__':
     fitter.extra_contributions[1].plot([0.1, 1.5, 0.5])
     fitter.extra_contributions[1].plot_distrib([0.1, 1.5, 0.5])
     #~ fitter.extra_contributions[1].plot([0.1, 10])
-    fitter.set_spheres(None)  # no spheres, no mstm runs
+    fitter.set_spheres(None)  # нет сфер, нет запусков MSTM
     fitter.report_freedom()
     input('Press enter to run peak fitting')
     fitter.run()
@@ -652,20 +652,20 @@ if __name__ == '__main__':
     contribs = fitter.get_extra_contributions()
     print(contribs)
     input('Press enter to continue')
-    # test peak fit
+    # тест подбора пика
     from contributions import LinearBackground, LorentzPeak
     fitter.set_extra_contributions([LinearBackground(fitter.wls, 'lin bkg'),
                                     LorentzPeak(fitter.wls, 'lorentz peak')],
                                     [0.02, -0.001,
                                      100, 550, 50])
     # fitter.extra_contributions[1].plot([100, 550, 50])
-    fitter.set_spheres(None)  # no spheres, no mstm runs
+    fitter.set_spheres(None)  # нет сфер, нет запусков MSTM
     fitter.report_freedom()
     input('Press enter to run peak fitting')
     fitter.run()
     fitter.report_result()
     input('Press enter to continue')
-    # test MSTM fit
+    # тест подбора MSTM
     fitter.set_matrix('glass')
     fitter.set_extra_contributions([LinearBackground(fitter.wls, 'lin bkg')], [0.02, -0.001])
     #                         N    X      Y      Z    radius    materials
@@ -680,8 +680,8 @@ if __name__ == '__main__':
     input('Press enter to run MSTM fitting')
 
     fitter.run()
-    #~ fitter.start()  # thread method
-    #~ fitter.join()   # wait till end
+    #~ fitter.start()  # метод потока
+    #~ fitter.join()   # ожидание завершения
     fitter.report_result()
     #fitter.plot_result()
     #~ y_fit = _get_spectrum( wavelengths, values )

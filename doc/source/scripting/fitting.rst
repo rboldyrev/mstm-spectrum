@@ -1,36 +1,32 @@
-.. _fitting:
+...
 
+Подгонка
+--------
 
-Fitting
--------
+Подгонка экспериментальных спектров - это мощный инструмент для изучения плазмонных наночастиц.
+Подгонка с помощью теории Ми обычно используется для определения размеров частиц, но подгонка с помощью MSTM может
+анализировать даже агломераты (скопления) наночастиц, где теория Ми неприменима, см. [Avakyan2017]_ для примера.
+Другим применением является подгонка ядерно-оболочечных или многослойных частиц.
 
-Fitting of experimental spectra is a powerful tool for study of plasmonic nanoparticles. 
-Fitting with Mie theory is routinely used to provide information about particle sizes, but 
-fitting with MSTM can solve even agglomerates (packs) of nanoparticles, where Mie theory is not
-applicable, see [Avakyan2017]_ for example.
-Another application is the fitting with core-shell or multi-layered particles.
-
-
-The MSTM-studio used hard-coded target (penalty) function which is minimized during fitting (ChiSq):
+MSTM-studio использует жёстко заданную целевую (штрафную) функцию, которая минимизируется в процессе подгонки (ChiSq):
 
 .. math::
 
     \chi^2 = \sum_i \left( y_i^\text{(fit)} - y_i^\text{(dat)} \right)^2,    
+    
+где индекс `i` обозначает длины волн.
 
-where index `i` enumerates wavelengths.
 
-
-
-Example: fit with Mie theory
+Пример: подгонка по теории Ми
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Exampels experimental file, included in distribution, is the extinction spectra of gold particles laser-impregnated in glass, 
-synthesized and studied by Maximilian Heinz [Avakyan2017]_.
+Пример экспериментального файла, включённого в дистрибутив, - это спектр экстинкции золотых частиц, внедрённых в стекло лазером,
+синтезированных и изученных Максимилианом Хайнцем [Avakyan2017]_.
 
 .. literalinclude:: fit_by_Mie.py
    :lines: 3-27
 
-Output (final part)::
+Выходные данные (финальная часть)::
 
     ChiSq:	0.000219
     Optimal parameters
@@ -44,66 +40,64 @@ Output (final part)::
 
 .. image:: fit_by_Mie.png
 
-The low value of `ChiSq` and inspecting of agreement between theoretical and experimental curves are 
-indicate on *acceptable* fitting.
-The names of fitting parameters are explained in Constraints subsection (see :class:`.Parameter`).
-In this example the `ext00` and `ext01` are the parameters `a` and `b` of linear contribution,
-`ext02` is a scale multiplier for Mie contribution, `ext03` and `ext04` correspond to `mu` and `sigma` 
-parameters of Log-Normal distribution (see :class:`mstm_spectrum.MieLognormSpheres`).
-The last parameter, the common `scale` multiplier 100 % correlates with `ext02`, resulting in spurious absolute values. 
-If needed, the particle concentration can be estimated from thier product :math:`scale \times ext02` or by constraining one of them during fitting.
+Низкое значение `ChiSq` и визуальная проверка соответствия теоретических и экспериментальных кривых
+указывает на *приемлемую* подгонку.
+Названия параметров подгонки объясняются в разделе Ограничения (см. :class:`.Parameter`).
+В этом примере `ext00` и `ext01` представляют параметры `a` и `b` линейного вклада,
+`ext02` - коэффициент масштабирования для вклада Ми, `ext03` и `ext04` соответствуют параметрам `mu` и `sigma`
+логнормального распределения (см. :class:`mstm_spectrum.MieLognormSpheres`).
+Последний параметр, общий коэффициент `scale`, на 100% коррелирует с `ext02`, что приводит к ложным абсолютным значениям.
+При необходимости концентрация частиц может быть оценена по их произведению :math:`scale \times ext02` или путём наложения ограничений на один из них.
 
 
-Fitter class
+Класс Fitter
 ^^^^^^^^^^^^
 
 .. autoclass:: mstm_studio.fit_spheres_optic.Fitter
     :members:
 
 
-.. _constraints:
-
-Constraints
+Ограничения
 -----------
 
-The constraints allow to speed-up or direct the fitting. 
-Thier setup requires specification of variable names, which are described in Parameter class documentation:
+Ограничения позволяют ускорить или направить подгонку.
+Их настройка требует указания имен переменных, которые описаны в документации к классу Parameter:
 
 .. autoclass:: mstm_studio.fit_spheres_optic.Parameter
     :members:
 
 
-Example: fit by core-shell
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+Пример: подгонка по модели ядро-оболочка
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Fit the same experiment as above, but using model of core-shell particle, just to illustrate the technique.
+Подгонка того же эксперимента, что и выше, но с использованием модели частицы ядро-оболочка, просто для демонстрации методики.
 
 .. literalinclude:: fit_by_core-shell.py
    :lines: 3-35
 
-Output (final part)::
+Выходные данные (финальная часть)::
 
     ChiSq:	0.002354
-    Optimal parameters
-	    a00:	1.284882	(Varied:True)
-	    a01:	1.958142	(Varied:True)
-	    ext00:	0.186312	(Varied:True)
-	    ext01:	-0.000247	(Varied:True)
-	    scale:	-0.063814	(Varied:True)
-	    x00:	0.000000	(Varied:False)
-	    x01:	0.000000	(Varied:False)
-	    y00:	0.000000	(Varied:False)
-	    y01:	0.000000	(Varied:False)
-	    z00:	0.000000	(Varied:False)
-	    z01:	0.000000	(Varied:False)
+    Оптимальные параметры
+        a00:	1.284882	(Изменяемый:True)
+        a01:	1.958142	(Изменяемый:True)
+        ext00:	0.186312	(Изменяемый:True)
+        ext01:	-0.000247	(Изменяемый:True)
+        scale:	-0.063814	(Изменяемый:True)
+        x00:	0.000000	(Изменяемый:False)
+        x01:	0.000000	(Изменяемый:False)
+        y00:	0.000000	(Изменяемый:False)
+        y01:	0.000000	(Изменяемый:False)
+        z00:	0.000000	(Изменяемый:False)
+        z01:	0.000000	(Изменяемый:False)
 
 .. image:: fit_by_core-shell.png
 
-The fiting quality demonstrated by parameter ChiSq is ~10 times worse comparing when used the ensemble of non-interacting gold particles. 
-The figure shows unacceptable fitting quality too.
+Качество подгонки, демонстрируемое параметром ChiSq, в ~10 раз хуже по сравнению с использованием ансамбля невзаимодействующих золотых частиц.
+График также показывает неприемлемое качество подгонки.
 
-Constraints classes
-^^^^^^^^^^^^^^^^^^^
+Классы ограничений
+^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: mstm_studio.fit_spheres_optic.Constraint
     :members:

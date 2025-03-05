@@ -2,20 +2,20 @@
 #
 # ----------------------------------------------------- #
 #                                                       #
-#  This code is a part of T-matrix fitting project      #
-#  Contributors:                                        #
+#  Этот код является частью проекта подгонки T-матрицы  #
+#  Вкладчики:                                           #
 #   L. Avakyan <laavakyan@sfedu.ru>                     #
 #   K. Yablunovskiy <kirill-yablunovskii@mail.ru>       #
 #                                                       #
 # ----------------------------------------------------- #
 """
-Based on heaviliy rewritten MSTM-GUI code
+Основан на сильно переписанном коде MSTM-GUI
 <URL:https://github.com/dmayerich/mstm-gui>
 <https://git.stim.ee.uh.edu/optics/mstm-gui.git>
-by Dr. David Mayerich
+автор Dr. David Mayerich
 
-Optimized for spectral calculations (for many wavelengths)
-in order to use for fitting to experiment
+Оптимизирован для спектральных расчетов (для многих длин волн)
+с целью использования для подгонки к эксперименту
 """
 from __future__ import print_function
 from __future__ import division
@@ -23,21 +23,21 @@ import numpy as np
 from numpy.random import lognormal
 from scipy import interpolate
 import subprocess
-import os   # to delete files after calc.
-import sys  # to check whether running on Linux or Windows
+import os   # для удаления файлов после расчета
+import sys  # для проверки, работает ли на Linux или Windows
 import datetime
 import time
-import tempfile  # to run mstm in temporary directory
+import tempfile  # для запуска mstm во временной директории
 try:
     import matplotlib.pyplot as plt
 except ImportError:
     pass
-# use input in both python2 and python3
+# используем input как в python2, так и в python3
 try:
     input = raw_input
 except NameError:
     pass
-# use xrange in both python2 and python3
+# используем xrange как в python2, так и в python3
 try:
     xrange
 except NameError:
@@ -46,11 +46,11 @@ except NameError:
 
 class Profiler(object):
     '''
-    This class for benchmarking is from
+    Этот класс для бенчмаркинга взят из
     http://onesteptospace.blogspot.pt/2013/01/python.html
-    Usage:
+    Использование:
     >>> with Profiler() as p:
-    >>>     // your code to be profiled here
+    >>>     // ваш код для профилирования здесь
     '''
     def __enter__(self):
         self._startTime = time.time()
@@ -65,57 +65,57 @@ class SpheresOverlapError(Exception):
 
 class SPR(object):
     '''
-    Class for calculation of surface plasmin resonance (SPR),
-    running MSTM external code.
-    The MSTM executable should be set in MSTM_BIN environment
-    variable. Default is ~/bin/mstm.x
+    Класс для расчета поверхностного плазмонного резонанса (SPR),
+    запуска внешнего кода MSTM.
+    Исполняемый файл MSTM должен быть установлен в переменной окружения MSTM_BIN.
+    По умолчанию это ~/bin/mstm.x
     '''
 
     environment_material = 'Air'
 
     paramDict = {
       'number_spheres': 0,
-      'sphere_position_file': '',          # radius, X,Y,Z [nm], n ,k
+      'sphere_position_file': '',          # радиус, X,Y,Z [nm], n ,k
       'length_scale_factor': 1.0,          # 2π/λ[nm]
-      'real_ref_index_scale_factor': 1.0,  # multiplier for spheres
+      'real_ref_index_scale_factor': 1.0,  # множитель для сфер
       'imag_ref_index_scale_factor': 1.0,
-      'real_chiral_factor': 0.0,        # chiral passive spheres
+      'real_chiral_factor': 0.0,        # хиральные пассивные сферы
       'imag_chiral_factor': 0.0,
-      'medium_real_ref_index': 1.0,     # refraction index of the environment
+      'medium_real_ref_index': 1.0,     # показатель преломления среды
       'medium_imag_ref_index': 0.0,
       'medium_real_chiral_factor': 0.0,
       'medium_imag_chiral_factor': 0.0,
-      'target_euler_angles_deg': [0.0, 0.0, 0.0],  # ignored for random orient. calc.
+      'target_euler_angles_deg': [0.0, 0.0, 0.0],  # игнорируется для расчетов со случайной ориентацией
 
-      'mie_epsilon': 1.0E-12,           # Convergence criterion for determining the number of orders
-                                        # in the Mie expansions. Negative value - number of orders.
-      'translation_epsilon': 1.0E-8,    # Convergence criterion for estimating the maximum order of the cluster T matrix
-      'solution_epsilon': 1.0E-8,       # Precision of linear equation system solution
+      'mie_epsilon': 1.0E-12,           # Критерий сходимости для определения количества порядков
+                                        # в разложениях Ми. Отрицательное значение - количество порядков.
+      'translation_epsilon': 1.0E-8,    # Критерий сходимости для оценки максимального порядка кластерной T-матрицы
+      'solution_epsilon': 1.0E-8,       # Точность решения системы линейных уравнений
       't_matrix_convergence_epsilon': 1.0E-6,
-      'plane_wave_epsilon': 1E-3,       # Precision of expansion of incedent field (both for palne and gaussian waves)
-      'iterations_per_correction': 20,  # ignored for big 'near_field_translation_distance'
-      'max_number_iterations': 2000,    # with account of all iterations
-      'near_field_translation_distance': 1.0E6,  # can be big real, small real or negative. TWEAK FOR PERFORMANCE
+      'plane_wave_epsilon': 1E-3,       # Точность разложения падающего поля (как для плоских, так и для гауссовых волн)
+      'iterations_per_correction': 20,  # игнорируется для больших 'near_field_translation_distance'
+      'max_number_iterations': 2000,    # с учетом всех итераций
+      'near_field_translation_distance': 1.0E6,  # может быть большим действительным, малым действительным или отрицательным. НАСТРОЙКА ДЛЯ ПРОИЗВОДИТЕЛЬНОСТИ
       'store_translation_matrix': 0,
-      'fixed_or_random_orientation': 1,  # 0 - fixed, 1 - random
-      'gaussian_beam_constant': 0,       # CB = 1/(k ω0). CB = 0 - plane wave
-      'gaussian_beam_focal_point': [0.0, 0.0, 0.0],  # does not alters results for plane wave and random orientations
-      'run_print_file': '',              # if balnk will use stdout
-      'write_sphere_data': 0,            # 1 - detail, 0 - concise
+      'fixed_or_random_orientation': 1,  # 0 - фиксированная, 1 - случайная
+      'gaussian_beam_constant': 0,       # CB = 1/(k ω0). CB = 0 - плоская волна
+      'gaussian_beam_focal_point': [0.0, 0.0, 0.0],  # не влияет на результаты для плоской волны и случайных ориентаций
+      'run_print_file': '',              # если пусто, будет использован stdout
+      'write_sphere_data': 0,            # 1 - подробно, 0 - кратко
 
-      'output_file': 'test.dat',         # should change for each run
+      'output_file': 'test.dat',         # должно изменяться для каждого запуска
 
-      'incident_or_target_frame': 0,     # used for scattering matrix output
+      'incident_or_target_frame': 0,     # используется для вывода матрицы рассеяния
       'min_scattering_angle_deg': 0.0,
       'max_scattering_angle_deg': 180.0,
-      'min_scattering_plane_angle_deg': 0.0,   # selects a plane for fixed orient.
-      'max_scattering_plane_angle_deg': 0.0,   # selects a plane for fixed orient.
+      'min_scattering_plane_angle_deg': 0.0,   # выбирает плоскость для фиксированной ориентации
+      'max_scattering_plane_angle_deg': 0.0,   # выбирает плоскость для фиксированной ориентации
       'delta_scattering_angle_deg': 1.0,
-      'calculate_near_field': 0,       # no near field calculations
-      'calculate_t_matrix': 1,         # 1 - new calc., 0 - use old, 2 - continue calc
+      'calculate_near_field': 0,       # без расчетов ближнего поля
+      'calculate_t_matrix': 1,         # 1 - новый расчет, 0 - использовать старый, 2 - продолжить расчет
       't_matrix_file': 'tmatrix-temp.dat',
-      'sm_number_processors': 10,      # actual number of procesors is
-                                       # minimum to this value and provided by mpi
+      'sm_number_processors': 10,      # фактическое количество процессоров
+                                       # минимум до этого значения и предоставляется mpi
     }
 
     local_keys = ['output_file', 'length_scale_factor',
@@ -124,41 +124,41 @@ class SPR(object):
 
     def __init__(self, wavelengths):
         '''
-        Parameter:
+        Параметр:
             wavelengths: numpy array
-                Wavelegths in nm
+                Длины волн в нм
         '''
         self.wavelengths = wavelengths
         self.command = os.environ.get('MSTM_BIN', '~/bin/mstm.x')
 
     def set_spheres(self, spheres):
         self.spheres = spheres
-        # count spheres with positive radius:
+        # считаем сферы с положительным радиусом:
         self.paramDict['number_spheres'] = np.sum(self.spheres.a > 0)
 
     def simulate(self, outfn=None):
         '''
-        Start the simulation.
+        Начать симуляцию.
 
-        The inpuit parameters are read from object dictionary `paramDict`.
-        Routine will prepare input file `scriptParams.inp` in the temporary folder,
-        which will be deleted after calculation.
+        Входные параметры читаются из словаря объекта `paramDict`.
+        Программа подготовит входной файл `scriptParams.inp` во временной папке,
+        который будет удален после расчета.
 
-        After calculation the result depends on the polarization setting.
-        For polarized light the object fields will be filled:
+        После расчета результат зависит от настройки поляризации.
+        Для поляризованного света поля объекта будут заполнены:
 
             extinction_par, extinction_ort,
             absorbtion_par, absorbtion_ort,
             scattering_par, scattering_ort.
 
-        While for orientation-averaged calculation just:
+        В то время как для усредненной по ориентациям расчетов просто:
 
-            extinction, absorbtion and scattering.
+            extinction, absorbtion и scattering.
         '''
-        if self.paramDict['number_spheres'] == 0:  # np spheres
+        if self.paramDict['number_spheres'] == 0:  # нет сфер
             return self.wavelengths, np.zeros_like(self.wavelengths)
         if self.spheres.check_overlap():
-            raise SpheresOverlapError('Spheres overlapping!')
+            raise SpheresOverlapError('Сферы пересекаются!')
         if isinstance(self.environment_material, Material):
             material = self.environment_material
         else:
@@ -185,7 +185,7 @@ class SPR(object):
                             svalue = '  '.join(map(str, self.paramDict[key]))
                         else:
                             svalue = str(self.paramDict[key])
-                        # replace exponent symbol
+                        # заменяем символ экспоненты
                         svalue = svalue.replace('e', 'd', 1)
                     outFID.write('%s \n' % svalue)
 
@@ -208,7 +208,7 @@ class SPR(object):
 
                 for i in xrange(len(self.spheres)):
                     a = self.spheres.a[i]
-                    if a > 0:  # consider only positive radii
+                    if a > 0:  # учитываем только положительные радиусы
                         x = self.spheres.x[i]
                         y = self.spheres.y[i]
                         z = self.spheres.z[i]
@@ -222,7 +222,7 @@ class SPR(object):
             outFID.write('end_of_options\n')
             outFID.close()
 
-            # run the binary
+            # запуск бинарного файла
             if sys.platform == 'win32':
                 si = subprocess.STARTUPINFO()
                 si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
@@ -232,12 +232,12 @@ class SPR(object):
                 subprocess.call('%s scriptParams.inp > /dev/null' % self.command,
                                 shell=True, cwd=tmpdir)
 
-            # parse the simulation results
-            if self.paramDict['fixed_or_random_orientation'] == 0:  # fixed orientation
-                self.extinction_par = []  # parallel polarization (\hat \alpha)
+            # разбор результатов симуляции
+            if self.paramDict['fixed_or_random_orientation'] == 0:  # фиксированная ориентация
+                self.extinction_par = []  # параллельная поляризация (\hat \alpha)
                 self.absorbtion_par = []
                 self.scattering_par = []
-                self.extinction_ort = []  # perpendicular polarization (\hat \beta)
+                self.extinction_ort = []  # перпендикулярная поляризация (\hat \beta)
                 self.absorbtion_ort = []
                 self.scattering_ort = []
                 for l in self.wavelengths:
@@ -273,7 +273,7 @@ class SPR(object):
                 self.scattering_ort = np.array(self.scattering_ort)
                 return (self.wavelengths,
                         (self.extinction_par + self.extinction_ort))
-            else:    # random orientation
+            else:    # случайная ориентация
                 self.extinction = []
                 self.absorbtion = []
                 self.scattering = []
@@ -302,9 +302,9 @@ class SPR(object):
 
     def plot(self):
         '''
-        Plot results with matplotlib.pyplot
+        Построить результаты с использованием matplotlib.pyplot
         '''
-        if self.paramDict["fixed_or_random_orientation"] == 1:  # random
+        if self.paramDict["fixed_or_random_orientation"] == 1:  # случайная ориентация
             plt.plot(self.wavelengths, self.extinction, 'r-', label='extinction')
         else:
             plt.plot(self.wavelengths, self.extinction_par, 'r-', label='extinction par.')
@@ -315,16 +315,16 @@ class SPR(object):
 
     def write(self, filename):
         '''
-        Save results to file
+        Сохранить результаты в файл
         '''
-        if self.paramDict["fixed_or_random_orientation"] == 1:  # random
+        if self.paramDict["fixed_or_random_orientation"] == 1:  # случайная ориентация
             fout = open(filename, 'w')
             fout.write('#Wavel.\tExtinct.\n')
             for i in range(len(self.wavelengths)):
                 fout.write('%.4f\t%.8f\r\n' % (self.wavelengths[i],
                                                self.extinction[i]))
             fout.close()
-        else:   # fixed
+        else:   # фиксированная ориентация
             fout = open(filename, 'w')
             fout.write('#Wavel.\tExt_par\tExt_ort\n')
             for i in range(len(self.wavelengths)):
@@ -335,26 +335,26 @@ class SPR(object):
     def set_incident_field(self, fixed=False, azimuth_angle=0.0,
                            polar_angle=0.0, polarization_angle=0.0):
         '''
-            Set incident wave orientation and polarization
+            Установить ориентацию и поляризацию падающей волны
 
-            Parameters:
+            Параметры:
 
                 fixed: bool
-                    True  - fixed orientation and polarized light
-                    False - average over all orientations and polarizations
+                    True  - фиксированная ориентация и поляризованный свет
+                    False - усреднение по всем ориентациям и поляризациям
 
-                azimuth_angle, polar_angle: float (degrees)
+                azimuth_angle, polar_angle: float (градусы)
 
-                polarization_angle: float (degrees)
-                    !sensible only for near field calculation!
-                    polarization angle relative to the `k-z` palne.
-                    0 - X-polarized, 90 - Y-polarized (if `azimuth` and
-                    `polar` angles are zero).
+                polarization_angle: float (градусы)
+                    !имеет смысл только для расчета ближнего поля!
+                    угол поляризации относительно плоскости `k-z`.
+                    0 - X-поляризация, 90 - Y-поляризация (если `azimuth` и
+                    `polar` углы равны нулю).
         '''
         if not fixed:
-            self.paramDict['fixed_or_random_orientation'] = 1  # random
+            self.paramDict['fixed_or_random_orientation'] = 1  # случайная ориентация
         else:
-            self.paramDict['fixed_or_random_orientation'] = 0  # fixed
+            self.paramDict['fixed_or_random_orientation'] = 0  # фиксированная ориентация
             self.paramDict['incident_azimuth_angle_deg'] = azimuth_angle
             self.paramDict['incident_polar_angle_deg'] = polar_angle
             self.paramDict['polarization_angle_deg'] = polarization_angle
@@ -362,28 +362,28 @@ class SPR(object):
 
 class Material(object):
     r"""
-    Material class.
+    Класс материала.
 
-    Use `get_n()` and `get_k()` methods to obtain values of refraction
-    index at arbitraty wavelength (in nm).
+    Используйте методы `get_n()` и `get_k()` для получения значений показателя
+    преломления на произвольной длине волны (в нм).
     """
     def __init__(self, file_name, wls=None, nk=None, eps=None):
         r"""
-        Parameters:
+        Параметры:
 
         file_name:
-            1. complex value, written in numpy format or as string;
-            2. one of the predefined strings (air, water, glass);
-            3. filename with optical constants.
+            1. комплексное значение, записанное в формате numpy или как строка;
+            2. одна из предопределенных строк (air, water, glass);
+            3. имя файла с оптическими константами.
 
-            File header should state `lambda`, `n` and `k` columns
-            If either `nk= n + 1j*k` or `eps = re + 1j*im` arrays are
-            specified, then the data from one of them will be used
-            and filename content will be ignored.
+            Заголовок файла должен указывать столбцы `lambda`, `n` и `k`
+            Если указаны либо `nk= n + 1j*k`, либо `eps = re + 1j*im` массивы,
+            то данные из одного из них будут использованы,
+            а содержимое файла будет проигнорировано.
 
-        wls: float array
-            array of wavelengths (in nm) used for data interpolation.
-            If None then ``np.linspace(300, 800, 500)`` will be used.
+        wls: массив float
+            массив длин волн (в нм), используемых для интерполяции данных.
+            Если None, то будет использован ``np.linspace(300, 800, 500)``.
 
         """
         if isinstance(file_name, str):
@@ -423,12 +423,12 @@ class Material(object):
                 else:
                     optical_constants = np.genfromtxt(file_name, names=True)
                     wls = optical_constants['lambda']
-                    if np.max(wls) < 100:  # wavelengths are in micrometers
-                        wls = wls * 1000   # convert to nm
+                    if np.max(wls) < 100:  # длины волн в микрометрах
+                        wls = wls * 1000   # конвертируем в нм
                     n = optical_constants['n']
                     k = optical_constants['k']
-                    if wls[0] > wls[1]:  # form bigger to smaller
-                        wls = np.flipud(wls)  # reverse order
+                    if wls[0] > wls[1]:  # от большего к меньшему
+                        wls = np.flipud(wls)  # обратный порядок
                         n = np.flipud(n)
                         k = np.flipud(k)
                     n = n[wls > wl_min]
@@ -439,8 +439,8 @@ class Material(object):
                     wls = wls[wls < wl_max]
         wl_step = np.abs(wls[1] - wls[0])
         if (wl_step > 1.1) and (wl_step < 500):
-            interp_kind = 'cubic'                # cubic interpolation
-        else:  # too dense or too sparse mesh, linear interpolation is needed
+            interp_kind = 'cubic'                # кубическая интерполяция
+        else:  # слишком плотная или слишком редкая сетка, нужна линейная интерполяция
             interp_kind = 'linear'
         # print('Interpolation kind : %s'%interp_kind)
         self._get_n_interp = interpolate.interp1d(wls, n, kind=interp_kind)
@@ -457,21 +457,21 @@ class Material(object):
 
     def plot(self, wls=None, fig=None, axs=None):
         r"""
-        plot ``n`` and ``k`` dependence from wavelength
+        построить зависимость ``n`` и ``k`` от длины волны
 
-        Parameters:
+        Параметры:
 
-            wls: float array
-                array of wavelengths (in nm). If None then
-                ``np.linspace(300, 800, 500)`` will be used.
+            wls: массив float
+                массив длин волн (в нм). Если None, то
+                будет использован ``np.linspace(300, 800, 500)``.
 
-            fig: matplotlib figure
+            fig: фигура matplotlib
 
-            axs: matplotlib axes
+            axs: оси matplotlib
 
-        Return:
+        Возвращает:
 
-            filled/created fig and axs objects
+            созданные/заполненные объекты fig и axs
         """
         if wls is None:
             wls = np.linspace(300, 800, 500)
@@ -481,8 +481,8 @@ class Material(object):
             axs = fig.add_subplot(111)
         axs.plot(wls, self.get_n(wls), label='Real')
         axs.plot(wls, self.get_k(wls), label='Imag')
-        axs.set_ylabel('Refraction index')
-        axs.set_xlabel('Wavelength, nm')
+        axs.set_ylabel('Показатель преломления')
+        axs.set_xlabel('Длина волны, нм')
         axs.legend()
         if flag:
             plt.show()
@@ -491,7 +491,7 @@ class Material(object):
 
 # class MaterialManager():
     # """
-    # Cache for materials, to decrease file i/o
+    # Кэш для материалов, чтобы уменьшить количество операций ввода-вывода
     # """
     # def __init__(self, wavelengths):
         # self.materials = {}
@@ -499,27 +499,27 @@ class Material(object):
 
 class Spheres(object):
     """
-    Abstract collection of spheres
+    Абстрактная коллекция сфер
 
-    Object fields:
+    Поля объекта:
         N: int
-            number of spheres
-        x, y, z: numpy arrays
-            coordinates of spheres centers
-        a: list or arrray
-            spheres radii
-        materials: numpy array
-            Material objects or strings
+            количество сфер
+        x, y, z: массивы numpy
+            координаты центров сфер
+        a: список или массив
+            радиусы сфер
+        materials: массив numpy
+            объекты Material или строки
     """
     def __init__(self):
         """
-        Creates empty collection of spheres. Use child classes for non-empty!
+        Создает пустую коллекцию сфер. Используйте дочерние классы для непустых!
         """
         self.N = 0
         self.x = []
         self.y = []
         self.z = []
-        self.a = []  # radius
+        self.a = []  # радиус
         self.materials = []
 
     def __len__(self):
@@ -527,7 +527,7 @@ class Spheres(object):
 
     def check_overlap(self, eps=0.001):
         """
-        Check if spheres are overlapping
+        Проверить, пересекаются ли сферы
         """
         result = False
         n = len(self.x)
@@ -540,21 +540,21 @@ class Spheres(object):
                 Rj = self.a[j]
                 dist = np.sqrt(dx * dx + dy * dy + dz * dz)
                 if dist < Ri + Rj + eps:
-                    # distance between spheres is less than sum of thier radii
-                    # but there still can be nested spheres, check it
+                    # расстояние между сферами меньше суммы их радиусов
+                    # но все еще могут быть вложенные сферы, проверяем это
                     if Ri > Rj:
                         result = Ri < dist + Rj + eps
                     else:  # Rj < Ri
                         result = Rj < dist + Ri + eps
-                if result:  # avoid unneeded steps
+                if result:  # избегаем лишних шагов
                     return True
         return result
 
     def append(self, sphere):
         """
-        Append by data from SingleSphere object
+        Добавить данные из объекта SingleSphere
 
-        Parameter:
+        Параметр:
 
             sphere: SingleSphere
         """
@@ -567,7 +567,7 @@ class Spheres(object):
 
     def delete(self, i):
         """
-        Delete element with index `i`
+        Удалить элемент с индексом `i`
         """
         self.a = np.delete(self.a, i)
         self.x = np.delete(self.x, i)
@@ -578,7 +578,7 @@ class Spheres(object):
 
     def extend(self, spheres):
         """
-        Append by all items from object `spheres`
+        Добавить все элементы из объекта `spheres`
         """
         for i in xrange(len(spheres)):
             self.append(SingleSphere(spheres.x[i], spheres.y[i],
@@ -586,14 +586,14 @@ class Spheres(object):
 
     def get_center(self, method=''):
         """
-        calculate center of masses in assumption of uniform density
+        рассчитать центр масс в предположении равномерной плотности
 
-        Parameter:
+        Параметр:
 
-            method: string {''|'mass'}
-                If method == 'mass' then center of masses
-                (strictly speaking, volumes) is calculated.
-                Otherwise all spheres are averaged evenly.
+            method: строка {''|'mass'}
+                Если method == 'mass', то рассчитывается центр масс
+                (строго говоря, объемов).
+                В противном случае все сферы усредняются равномерно.
         """
         weights = np.ones(self.N)
         if method.lower() == 'mass':
@@ -605,20 +605,20 @@ class Spheres(object):
 
     def load(self, filename, mat_filename='etaGold.txt', units='nm'):
         """
-            Reads spheres coordinates and radii from file.
+            Читает координаты и радиусы сфер из файла.
 
-            Parameters:
+            Параметры:
 
-                filename: string
-                    file to be read from
+                filename: строка
+                    файл для чтения
 
-                mat_filename: string
-                    all spheres will have this material (sphere-material
-                    storaging is not yet implemented)
+                mat_filename: строка
+                    все сферы будут иметь этот материал (хранение
+                    материала сферы еще не реализовано)
 
-                units: string {'mum'|'nm'}
-                    distance units.
-                    If 'mum' then coordinated will be scaled (x1000)
+                units: строка {'mum'|'nm'}
+                    единицы измерения расстояния.
+                    Если 'mum', то координаты будут масштабированы (x1000)
         """
         x = []
         y = []
@@ -628,7 +628,7 @@ class Spheres(object):
             f = open(filename, 'r')
             text = f.readlines()
             for line in text:
-                if line[0] != '#':  # skip comment and header
+                if line[0] != '#':  # пропустить комментарии и заголовок
                     words = [w.strip() for w in line.replace(',', '.').split()]
                     data = [float(w) for w in words]
                     a.append(data[0])
@@ -652,11 +652,11 @@ class Spheres(object):
 
     def save(self, filename):
         """
-        Saves spheres coordinates and radii to file.
+        Сохраняет координаты и радиусы сфер в файл.
 
-        Parameter:
+        Параметр:
 
-            filename: string
+            filename: строка
         """
         try:
             f = open(filename, 'w')
@@ -679,20 +679,20 @@ class Spheres(object):
 
 class SingleSphere(Spheres):
     """
-    Collection of spheres with only one sphere
+    Коллекция сфер с одной сферой
     """
     def __init__(self, x, y, z, a, mat_filename='etaGold.txt'):
         """
-        Parameters:
+        Параметры:
 
             x, y, z: float
-                coordinates of spheres centers
+                координаты центров сфер
 
             a: float
-                spheres radii
+                радиусы сфер
 
-            mat_filename: string, float, complex value or Material object
-                material specification
+            mat_filename: строка, float, комплексное значение или объект Material
+                спецификация материала
         """
         self.N = 1
         self.x = np.array([x])
@@ -707,26 +707,26 @@ class SingleSphere(Spheres):
 
 class LogNormalSpheres(Spheres):
     """
-    The set of spheres positioned on the regular mesh
-    with random Log-Normal distributed sizes.
-    In the case overlapping of the spheres the sizes
-    should(?) be regenerated.
+    Набор сфер, расположенных на регулярной сетке
+    с размерами, распределенными по логнормальному закону.
+    В случае пересечения сфер размеры
+    должны(?) быть перегенерированы.
     """
     def __init__(self, N, mu, sigma, d, mat_filename='etaGold.txt'):
         """
-        Parameters:
+        Параметры:
 
             N: int
-                number of spheres
-            mu, sigma: floats
-                parameters of Log-Normal distribution
+                количество сфер
+            mu, sigma: float
+                параметры логнормального распределения
             d: float
-                average empty space between spheres centers
-            mat_filename: string or Material object
-                specification of spheres material
+                среднее пустое пространство между центрами сфер
+            mat_filename: строка или объект Material
+                спецификация материала сфер
         """
-        # estimate the box size:
-        a = mu  # average sphere radius
+        # оцениваем размер коробки:
+        a = mu  # средний радиус сферы
         A = (N**(1. / 3) + 1) * (d + 2 * a)
         print('Box size estimated as: %.1f nm' % A)
         # A = A*1.5
@@ -767,31 +767,31 @@ class ExplicitSpheres (Spheres):
     def __init__(self, N=0, Xc=[], Yc=[], Zc=[], a=[],
                  mat_filename='etaGold.txt'):
         """
-        Create explicitely defined spheres
+        Создать явно определенные сферы
 
-        Parameters:
+        Параметры:
             N: int
-                number of spheres
-            Xc, Yc, Zc: lists or numpy arrays
-                coordinates of the spheres centers
-            a: list or numpy array
-                radii of the spheres
-            mat_filename: string, list of strings, Material or list of
-                Materials specification of spheres material
+                количество сфер
+            Xc, Yc, Zc: списки или массивы numpy
+                координаты центров сфер
+            a: список или массив numpy
+                радиусы сфер
+            mat_filename: строка, список строк, Material или список
+                Materials спецификация материала сфер
 
-            Note: If only first array Xc is supplied, than all data is
-            assumed zipped in it,
-            i.e.: `Xc = [X1, Y1, Z1, a1, ..., XN, YN, ZN, aN]`
+            Примечание: Если указан только первый массив Xc, то все данные
+            предполагаются упакованными в нем,
+            т.е.: `Xc = [X1, Y1, Z1, a1, ..., XN, YN, ZN, aN]`
         """
         super(ExplicitSpheres, self).__init__()
         self.N = N
-        if N == 0:  # special case of empty object
+        if N == 0:  # специальный случай пустого объекта
             self.x = []
             self.y = []
             self.z = []
             self.a = []
             return
-        if N < len(Xc):  # data is zipped in Xc
+        if N < len(Xc):  # данные упакованы в Xc
             assert(4 * N == len(Xc))
             self.x = np.zeros(N)
             self.y = np.zeros(N)
@@ -811,17 +811,17 @@ class ExplicitSpheres (Spheres):
             self.a = np.abs(np.array(a))
 
         if isinstance(mat_filename, (Material, str)):
-            # one material filename for all spheres
+            # одно имя файла материала для всех сфер
             self._set_material(mat_filename)
         elif isinstance(mat_filename, list):
-            # list of material filenames for all spheres
+            # список имен файлов материалов для всех сфер
             if len(mat_filename) == 1:
                 self._set_material(mat_filename[0])
             else:
                 assert(len(mat_filename) == self.N)
                 for mat_fn in mat_filename:
-                    # TODO: use material manager to avoid re-creating
-                    # and extra file reads
+                    # TODO: использовать менеджер материалов, чтобы избежать повторного создания
+                    # и лишних чтений файлов
                     if isinstance(mat_fn, Material):
                         self.materials.append(mat_fn)
                     else:

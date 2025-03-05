@@ -929,7 +929,7 @@ def find_mat_key(material):
     return key
 
 def gen_mat_key(ask_replace=False):
-    """ generate new key for material dict """
+    """ генерируем новый ключ для словаря материалов """
     global w, materials
     if not ask_replace:
         i = len(materials)
@@ -1624,7 +1624,7 @@ class Camera(object):
 
     def project_point(self, x,y,z):
         '''
-        Apply shift and project 3D positions to screen
+        Применяем сдвиг и проецируем 3D позиции на экран
         '''
         X = (np.array([x, y, z]) - self.viewpoint) * self.scale
         X = np.dot(X, self.axes)
@@ -1632,7 +1632,7 @@ class Camera(object):
 
     def project(self, positions):
         """
-        Apply shift and project 3D positions to screen
+        Применяем сдвиг и проецируем 3D позиции на экран
         """
         X = (positions - self.viewpoint) * self.scale
         X = np.dot(X, self.axes)

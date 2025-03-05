@@ -2,16 +2,16 @@
 #
 # ----------------------------------------------------- #
 #                                                       #
-#  This code is a part of T-matrix fitting project      #
-#  Contributors:                                        #
+#  Этот код является частью проекта подгонки T-матрицы  #
+#  Вкладчики:                                           #
 #    A. Skidanenko <ann.skidanenko@ya.ru>               #
 #    L. Avakyan <laavakyan@sfedu.ru>                    #
 #    V. Pryadchenko <vvpryadchenko@sfedu.ru>            #
 #                                                       #
 # ----------------------------------------------------- #
 """
-Dielectric function model for silver-gold alloy
-according to Fortran code published in:
+Модель диэлектрической функции для сплава серебра и золота
+согласно коду на Fortran, опубликованному в:
 D. Rioux, S. Vallières, S. Besner, P. Muñoz, E. Mazur, and M. Meunier,
 "An Analytic Model for the Dielectric Function of Au, Ag, and
  their Alloys" Adv. Opt. Mater. (2014) *2* 176-182
@@ -25,7 +25,7 @@ try:
 except:
     pass
 
-# use input in both python2 and python3
+# используем input как в python2, так и в python3
 try:
     input = raw_input
 except NameError:
@@ -67,19 +67,19 @@ A2103 = 57.540
 
 class AlloyAuAg(Material):
     """
-    Material class for AuAg alloys.
+    Класс материала для сплавов AuAg.
 
-    Use `get_n()` and `get_k()` to obtain values of refraction indexes (real
-    and imaginary) at arbitraty wavelength (in nm) by model and code
-    from Rioux et al doi:10.1002/adom.201300457
+    Используйте `get_n()` и `get_k()` для получения значений показателей преломления (действительной
+    и мнимой частей) на произвольной длине волны (в нм) с помощью модели и кода
+    из работы Rioux et al doi:10.1002/adom.201300457
     """
 
     def __init__(self, x_Au):
         '''
-        Parameters:
+        Параметры:
 
             x_Au: float
-                fraction of gold
+                доля золота
         '''
         self.x_Au = float(x_Au)
         self.__name__ = 'Mat_alloyAu%.2fAg%.2f' % (self.x_Au, 1-self.x_Au)

@@ -7,32 +7,32 @@ class SizeCorrectedMaterial(Material):
     def __init__(self, file_name, wls=None, nk=None, eps=None,
                  omega_p=10.0, gamma_b=0.1, v_Fermi=1.0, sc_C=0.0):
         '''
-        Create material with correction to the finite crystal size.
-        Only life-time limit (~1/gamma) is considered.
-        This should be sufficient for the sizes above ~2 nm.
-        The particles smaller than ~2 nm require more sofisticated
-        modifications (band gap, etc.)
+        Создание материала с поправкой на конечный размер кристалла.
+        Учитывается только предел времени жизни (~1/gamma).
+        Этого должно быть достаточно для размеров выше ~2 нм.
+        Для частиц меньше ~2 нм требуются более сложные
+        модификации (ширина запрещенной зоны и т.д.)
 
-        Parameters:
+        Параметры:
 
         file_name, wls, nk, eps:
-            same meanining as for Material
+            то же значение, что и для Material
 
-        Parameters for size correction:
+        Параметры для поправки на размер:
 
         omega_p:
-            plasma frequency (bulk) [eV]
+            плазменная частота (объемная) [эВ]
 
         gamma_b:
-            life-time broadening (bulk) [eV]
+            уширение времени жизни (объемное) [эВ]
 
         v_Fermi:
-            Fermi velocity (bulk) [nm/fs]
+            скорость Ферми (объемная) [нм/фс]
 
         sc_C:
-            size-corr. adj. parameter [unitless]
+            параметр настройки поправки на размер [безразмерный]
 
-        size of the particle is specified as `self.D`
+        размер частицы задается как `self.D`
         '''
         if isinstance(file_name, Material):
             self.material = file_name
@@ -51,19 +51,19 @@ class SizeCorrectedMaterial(Material):
 
     def get_gamma_corr(self):
         '''
-        correction to the life time energy broadening
-        (gamma) in the Drude low induced by the
-        finite particle size
+        Поправка на уширение энергии времени жизни
+        (gamma) в модели Друда, вызванное
+        конечным размером частицы
         '''
-        vF = self.v_Fermi / 1.6  # Fermi vel. in [nm*eV]
+        vF = self.v_Fermi / 1.6  # Скорость Ферми в [нм*эВ]
         return self.sc_C * 2 * vF / self.D
 
     def _correction(self, wls):
-        # size is taken from self.D variable
-        if self.D > 100:  # don't consider very big particles
+        # размер берется из переменной self.D
+        if self.D > 100:  # не учитываем очень большие частицы
             return 0
-        omega = 1240 / wls  # nm -> eV
-        # correction to gamma due to mean free path limit by size
+        omega = 1240 / wls  # нм -> эВ
+        # поправка на gamma из-за ограничения длины свободного пробега размером
         gamma_corr = self.get_gamma_corr()
         return self.omega_p**2 / omega * \
             (1 / (omega + 1j * self.gamma_b) -
@@ -103,9 +103,9 @@ class SizeCorrectedGold(SizeCorrectedMaterial):
 
     def __init__(self, file_name, wls=None, nk=None, eps=None):
         '''
-        Size correction for gold dielectric function
-        (mean free path is limited by particle size)
-        according to
+        Поправка на размер для диэлектрической функции золота
+        (длина свободного пробега ограничена размером частицы)
+        согласно
 
         A. Derkachova, K. Kolwas, I. Demchenko
         Plasmonics, 2016, 11, 941
@@ -122,9 +122,9 @@ class SizeCorrectedSilver(SizeCorrectedMaterial):
 
     def __init__(self, file_name, wls=None, nk=None, eps=None):
         '''
-        Size correction for gold dielectric function
-        (mean free path is limited by particle size)
-        according to
+        Поправка на размер для диэлектрической функции серебра
+        (длина свободного пробега ограничена размером частицы)
+        согласно
 
         J.M.J. Santillán, F.A. Videla, M.B.F. van Raap, D. Muraca,
         L.B. Scaffardi, D.C. Schinca
@@ -145,7 +145,7 @@ if __name__ == '__main__':
 
     wls = np.arange(300, 800, 1)
 
-    ### Gold ###
+    ### Золото ###
     # ~ matAu = Material('nk/etaGold.txt')
     # ~ matAu3nm = SizeCorrectedGold('nk/etaGold.txt')
     matAu = AlloyAuAg(x_Au=1.0)
@@ -203,7 +203,7 @@ if __name__ == '__main__':
     plt.savefig('Au%.0fnm_bulk_vs_sizecorr.png' % D)
     plt.show()
 
-    ### Silver ###
+    ### Серебро ###
     # ~ matAg = Material('nk/etaSilver.txt')
     # ~ matAg3nm = SizeCorrectedSilver('nk/etaSilver.txt')
     matAg = AlloyAuAg(x_Au=0.0)

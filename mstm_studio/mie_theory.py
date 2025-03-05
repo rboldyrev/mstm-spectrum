@@ -1,9 +1,9 @@
 """
-  code from nanophotonics/npmie repository
+  код из репозитория nanophotonics/npmie
   url: https://github.com/nanophotonics/npmie
-  code by Alan Sanders
+  код от Alan Sanders
 
-  modified to use in MSTM-studio by L.Aavakyan
+  модифицирован для использования в MSTM-studio от L.Aavakyan
 """
 
 import numpy as np
@@ -27,7 +27,7 @@ except:
 
 
 def sph_hn(n, x):
-    # calculate spherical hankel, h(n,x) = j(n,x) + iy(n,x) #
+    # вычисление сферической функции Ханкеля, h(n,x) = j(n,x) + iy(n,x) #
     jn, djn, yn, dyn = sph_jnyn(n, x)
     hn = jn + 1j * yn
     dhn = djn + 1j * dyn
@@ -36,20 +36,20 @@ def sph_hn(n, x):
 
 def calculate_mie_coefficients(n_max, x, m):
     """
-    Calculates the Mie coefficients.
+    Вычисляет коэффициенты Ми.
 
     :rtype : object
     :param n_max:
-    :param x: size parameter
+    :param x: параметр размера
     :param m:
     """
 
-    # calculate spherical bessels #
+    # вычисление сферических функций Бесселя #
     jn, djn, yn, dyn = sph_jnyn(n_max, x)      # j(n, x), y(n, x)
     jm, djm, ym, dym = sph_jnyn(n_max, m * x)  # j(n, mx), y(n, mx)
-    # calculate spherical hankel #
+    # вычисление сферической функции Ханкеля #
     hn, dhn = sph_hn(n_max, x)                 # h(n, x)
-    # calculate riccati bessel functions #
+    # вычисление функций Риккати-Бесселя #
     dpsi_n = [x * jn[n-1] - n * jn[n] for n in range(0, len(jn))]
     dpsi_m = [m * x * jm[n-1] - n * jm[n] for n in range(0, len(jm))]
     dzeta_n = [x * hn[n-1] - n * hn[n] for n in range(0, len(hn))]
@@ -61,22 +61,22 @@ def calculate_mie_coefficients(n_max, x, m):
 
 def calculate_mie_efficiencies(r, wavelength, n_sph, n_med):
     """
-    Calculates the mie efficiencies (q_scat, q_abs, q_ext, q_bscat)
-    for a sphere in a dielectric medium at a given wavelength.
+    Вычисляет эффективности Ми (q_scat, q_abs, q_ext, q_bscat)
+    для сферы в диэлектрической среде на заданной длине волны.
 
     :rtype : object
-    :param r: radius of the sphere
-    :param wavelength: wavelength of illumination
-    :param n_sph: complex refractive index of the sphere
-    :param n_med: real refractive index of the dielectric medium
+    :param r: радиус сферы
+    :param wavelength: длина волны освещения
+    :param n_sph: комплексный показатель преломления сферы
+    :param n_med: действительный показатель преломления диэлектрической среды
     :return:
     """
 
-    # calculate size parameter #
-    x = n_med * (2 * np.pi / wavelength) * r    # x = n_med * kr, size parameter
+    # вычисление параметра размера #
+    x = n_med * (2 * np.pi / wavelength) * r    # x = n_med * kr, параметр размера
     m = n_sph / n_med
-    # n_max = int(np.ceil(x.real)+1)      # number of terms in series expansion
-    n_max = int(x + 4 * x**(1.0 / 3.0) + 2)  # number of terms in series expansion
+    # n_max = int(np.ceil(x.real)+1)      # количество членов в разложении в ряд
+    n_max = int(x + 4 * x**(1.0 / 3.0) + 2)  # количество членов в разложении в ряд
 
     q_scat = 0
     q_bscat = 0
@@ -100,14 +100,14 @@ def calculate_mie_efficiencies(r, wavelength, n_sph, n_med):
 
 def calculate_mie_spectra(wavelengths, r, material, n_medium=1.):
     """
-    Calculates the mie scattering and extinction efficiency of spherical
-    nanoparticles with radius r and given material surrounded by a medium n_med
-    for a set of given wavelengths.
+    Вычисляет эффективности рассеяния и экстинкции Ми для сферических
+    наночастиц с радиусом r и заданным материалом, окруженных средой n_med,
+    для набора заданных длин волн.
     :rtype : object
-    :param wavelengths: array of wavelengths to calculate spectra from
-    :param r: radius of the sphere
-    :param material: instance of Material class
-    :param n_med: refractive index of the surrounding dielectric medium
+    :param wavelengths: массив длин волн для расчета спектров
+    :param r: радиус сферы
+    :param material: экземпляр класса Material
+    :param n_med: показатель преломления окружающей диэлектрической среды
     """
 
     mie_scattering = []
@@ -132,7 +132,7 @@ if __name__ == '__main__':
     #~ diameter_np = raw_input('Enter nanoparticle diameter (nm): ')
     #~ material = raw_input("Enter nanoparticle material: ")
     #~ medium = raw_input("Enter surrounding medium: ")
-    diameter_np = material = medium = ''  # test
+    diameter_np = material = medium = ''  # тест
     if diameter_np == '':
         diameter_np = 140.
     else:
@@ -150,12 +150,12 @@ if __name__ == '__main__':
         mie_absorption = calculate_mie_spectra(
             wavelength, diameter_np / 2.0, material_object, medium
         )
-    # save to file
+    # сохранение в файл
     data = np.stack([wavelength, mie_scattering, mie_backscattering, \
         mie_extinction, mie_absorption])
     np.savetxt('MIE.dat', np.transpose(data), header='wl\tscatt\tbscatt\text\tabs')
     fig = plt.figure()
-    # wavelength plots #
+    # графики по длине волны #
     ax = fig.add_subplot(411)
     ax.plot(wavelength, mie_scattering, 'r', label='scattering')
     ax.set_xticklabels(ax.get_xticklabels(), visible=False)

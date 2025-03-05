@@ -1,33 +1,27 @@
-.. _nearfield:
+.. _nearfield:  
 
+Визуализация ближнего поля  
+---------------------------  
 
-Visualization of near field 
----------------------------
+Код MSTM может быть использован для расчета распределения ближнего (или локального) поля.  
+Поле вычисляется в прямоугольной области, заданной входными данными (:meth:`nearfield.NearField.set_plane`).  
+В настоящее время можно визуализировать только величину электрического поля :math:`|E|^2`.  
 
-MSTM code can be used to calculate the distribution of the near (or local) field.
-The field is calculated on a rectangular region, specified by input (:meth:`nearfield.NearField.set_plane`).
-Currently, only magnititude of electric field :math:`|E|^2` can be visualized.
+Пример: распределение поля рядом с двумя частицами  
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  
 
+Две серебряные сферы с радиусами 5 и 3 нм расположены в точках 0,0,0 и 0,0,11.  
+Падающий луч с длиной волны 385 нм направлен вдоль оси Z и имеет X-поляризацию.  
 
-Example: field distribution near two particles
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. literalinclude:: mstm_nearfield.py  
+   :lines: 2-17  
 
-Two silver spheres with radii 5 and 3 nm are placed at 0,0,0 and 0,0,11. 
-Incident beam with wavelength 385 nm is directed by Z axis and have X polzarization.
+Полученное изображение  
 
-.. literalinclude:: mstm_nearfield.py
-   :lines: 2-17
+.. image:: mstm_nearfield.png  
 
+Класс  
+^^^^^  
 
-Resulting image
-
-
-.. image:: mstm_nearfield.png
-    
-
-Class
-^^^^^
-
-.. autoclass:: mstm_studio.nearfield.NearField
-    :members:
-
+.. autoclass:: mstm_studio.nearfield.NearField  
+    :members:  
